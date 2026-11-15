@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <!--
-  Rendezvous join / signup page. Static, self-contained: no build step, no external requests except the API.
+  Rendezvous join / signup page. Static, self-contained: no build step, no external requests except the API. Its only
+  other files are the self-hosted fonts in fonts/ (Geist and Geist Mono, SIL OFL, see fonts/LICENSE-Geist.txt), loaded
+  from this page's own origin (font-src 'self'); publish the fonts/ folder next to index.html.
   Hosted on static hosting; its public URL is the function's WEB_URL (invite links are <WEB_URL>?invite=<code>).
 
   CSP NOTE: the inline script and stylesheet are allowed by their sha256 hashes below. If you edit either block
@@ -12,7 +14,7 @@
     python3 -c "import re,hashlib,base64;h=open('web/index.html').read();[print(t,'sha256-'+base64.b64encode(hashlib.sha256(s.encode()).digest()).decode()) for t,s in re.findall(r'<(script|style)>(.*?)</(?:script|style)>',h,re.S)]"
   If PROD_API_BASE moves to another host, change connect-src to match.
 
-  LOCAL DEVELOPMENT: serve this file from localhost or 127.0.0.1 and add ?api=<local function URL>, e.g.
+  LOCAL DEVELOPMENT: serve this file (and fonts/) from localhost or 127.0.0.1 and add ?api=<local function URL>, e.g.
     http://localhost:8000/?api=http://127.0.0.1:54321/functions/v1/rendezvous
   The override is honoured only when this page's own hostname is localhost/127.0.0.1 AND the target is
   http://localhost:<port> or http://127.0.0.1:<port> (see pickApiBase). That is why connect-src also lists
@@ -20,12 +22,12 @@
   fetches PROD_API_BASE, script-src admits nothing but the hashed script, and a loopback origin can only reach the
   visitor's own machine, so it is no channel to send anything off it.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-9YraOvnH3kUVoTqAmhoAIEuNvjHSh+r/BuqiR9YL23Q='; style-src 'sha256-aLFUemPW0kzbuOTH4SPqw+PtnwzJ0WhEhcfj6yd/LoM='; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JUe9zqdT/YlNyf18KKUSpCIuvvRRITxam6CLKjY9L1Q='; style-src 'sha256-VZnjN0VC/iBOnwtl/hND5JKNuQo8Y+m2azgifCVBjS8='; font-src 'self'; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121416" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#07070a" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Rendezvous is a shared room where everyone's own AI coordinates a group plan. Get your personal link and connect it to Claude, ChatGPT or another MCP client.">
 <!-- Link previews (chat apps unfurl invite links). Static on purpose: never a room title, which is text someone else chose. -->
 <meta property="og:title" content="Join a group plan on Rendezvous">
@@ -33,295 +35,485 @@
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <title>Rendezvous · Join</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f6f68'/%3E%3Ccircle cx='12.5' cy='16' r='6' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3Ccircle cx='19.5' cy='16' r='6' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23a78bfa'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%2309090b'/%3E%3Ccircle cx='12.75' cy='16' r='6.25' fill='none' stroke='%23fafafa' stroke-width='1.8'/%3E%3Ccircle cx='19.25' cy='16' r='6.25' fill='none' stroke='%23fafafa' stroke-width='1.8'/%3E%3Cpath d='M16 10.66A6.25 6.25 0 0 1 16 21.34A6.25 6.25 0 0 1 16 10.66Z' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face { font-family: "Geist"; src: url("fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+
+/* tokens: dark first, light via prefers-color-scheme */
 :root {
-  --bg: #f6f4ef;
-  --surface: #ffffff;
-  --surface-2: #f1eee7;
-  --text: #1c1d1f;
-  --muted: #565b62;
-  --border: #ddd8cd;
-  --border-strong: #b9b3a6;
-  --accent: #1f6f68;
-  --accent-hover: #175a54;
-  --accent-text: #ffffff;
-  --accent-soft: #e1eeec;
-  --accent-ink: #165a54;
-  --focus: #1f6f68;
-  --warn-bg: #fbf1d9;
-  --warn-border: #e2c065;
-  --warn-text: #4f3a00;
-  --error-bg: #fbe9e7;
-  --error-border: #e9a39b;
-  --error-text: #8a1c14;
-  --ok-bg: #e4f2e8;
-  --ok-text: #1d5b31;
-  --code-bg: #f3f1ec;
-  --shadow: 0 1px 2px rgba(28, 29, 31, 0.04), 0 8px 24px rgba(28, 29, 31, 0.06);
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  --radius: 14px;
-  --gutter: 16px;
+  color-scheme: dark;
+  --bg: #07070a; --glass: rgba(15, 15, 21, .72); --raise: rgba(255, 255, 255, .035); --card: rgba(255, 255, 255, .025);
+  --tab-sel: rgba(255, 255, 255, .06); --line: rgba(255, 255, 255, .07); --line-2: rgba(255, 255, 255, .11); --line-3: rgba(255, 255, 255, .2);
+  --field-bg: rgba(0, 0, 0, .35); --field-line: #63636f;
+  --text: #ededf0; --text-2: #a1a1aa; --text-3: #96969f;
+  --violet: #a78bfa; --cyan: #22d3ee; --link: #c4b5fd; --link-line: rgba(196, 181, 253, .4);
+  --focus: #67e8f9; --focus-ring: rgba(103, 232, 249, .22);
+  --grad: linear-gradient(90deg, #a78bfa, #22d3ee);
+  --grad-text: linear-gradient(100deg, #ddd2ff, #b6a8ff 42%, #7ee7f7);
+  --grad-btn: linear-gradient(100deg, #bcadff, #93b9ff 50%, #6ee7f9); --btn-fg: #0a0a12;
+  --glow: 0 0 0 1px rgba(196, 181, 253, .45), 0 0 22px -2px rgba(139, 92, 246, .55), 0 0 46px -8px rgba(34, 211, 238, .5);
+  --btn2-bg: rgba(255, 255, 255, .04); --btn2-bg-hover: rgba(255, 255, 255, .08); --btn2-line: rgba(255, 255, 255, .13);
+  --badge-bg: rgba(34, 211, 238, .08); --badge-line: rgba(34, 211, 238, .3); --badge-text: #a5f3fc;
+  --warn: #fcd34d; --warn-bg: rgba(245, 158, 11, .075); --warn-line: rgba(245, 158, 11, .34);
+  --err: #fca5a5; --err-bg: rgba(239, 68, 68, .08); --err-line: rgba(239, 68, 68, .38);
+  --ok-text: #86efac; --ok-bg: rgba(34, 197, 94, .09); --ok-line: rgba(34, 197, 94, .4); --ok-glow: rgba(34, 197, 94, .45);
+  --term-bg: rgba(0, 0, 0, .42); --token: #a5f3fc; --token-glow: 0 0 14px rgba(34, 211, 238, .35); --tok-str: #67e8f9;
+  --aurora-a: rgba(124, 58, 237, .3); --aurora-b: rgba(6, 182, 212, .2); --grid-line: rgba(255, 255, 255, .042);
+  --shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 30px 60px -30px rgba(0, 0, 0, .85);
+  --edge: linear-gradient(160deg, rgba(196, 181, 253, .55), rgba(255, 255, 255, .08) 30%, rgba(255, 255, 255, .05) 70%, rgba(103, 232, 249, .42));
+  --acc-line: rgba(167, 139, 250, .45); --acc-bg: rgba(167, 139, 250, .1); --me-bg: rgba(167, 139, 250, .13);
+  --feat-glow: rgba(139, 92, 246, .16); --bar: rgba(167, 139, 250, .17); --bar-line: rgba(167, 139, 250, .4);
+  --ol-bg: rgba(34, 211, 238, .1); --ol-line: rgba(103, 232, 249, .75); --track: rgba(255, 255, 255, .03);
+  --sel: rgba(167, 139, 250, .35); --mark-bg: #15151c; --mark-line: rgba(255, 255, 255, .14);
+  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --r: 12px; --r-lg: 16px; --gutter: 16px; --ease: cubic-bezier(.2, .7, .2, 1);
 }
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --bg: #121416;
-    --surface: #1a1d20;
-    --surface-2: #22262a;
-    --text: #ebe8e2;
-    --muted: #a6aab0;
-    --border: #30353a;
-    --border-strong: #4a5057;
-    --accent: #5cc4b6;
-    --accent-hover: #7fd5ca;
-    --accent-text: #0b1f1c;
-    --accent-soft: #173330;
-    --accent-ink: #7fd5ca;
-    --focus: #7fd5ca;
-    --warn-bg: #2b2412;
-    --warn-border: #6d5822;
-    --warn-text: #f2d58b;
-    --error-bg: #2e1816;
-    --error-border: #74322b;
-    --error-text: #f5aba2;
-    --ok-bg: #16291d;
-    --ok-text: #9fdbb1;
-    --code-bg: #15181b;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+    color-scheme: light;
+    --bg: #fafafa; --glass: rgba(255, 255, 255, .8); --raise: rgba(9, 9, 11, .035); --card: #fff; --tab-sel: #fff;
+    --line: rgba(9, 9, 11, .08); --line-2: rgba(9, 9, 11, .12); --line-3: rgba(9, 9, 11, .22);
+    --field-bg: #fff; --field-line: #8b8b95;
+    --text: #09090b; --text-2: #52525b; --text-3: #5d5d67;
+    --violet: #7c3aed; --cyan: #0891b2; --link: #6d28d9; --link-line: rgba(109, 40, 217, .35);
+    --focus: #7c3aed; --focus-ring: rgba(124, 58, 237, .2);
+    --grad: linear-gradient(90deg, #7c3aed, #0891b2);
+    --grad-text: linear-gradient(100deg, #6d28d9, #4f46e5 50%, #0e7490);
+    --grad-btn: linear-gradient(100deg, #6d28d9, #4f46e5 50%, #0e7490); --btn-fg: #fff;
+    --glow: 0 0 0 1px rgba(109, 40, 217, .25), 0 8px 24px -8px rgba(109, 40, 217, .55), 0 0 36px -10px rgba(14, 116, 144, .45);
+    --btn2-bg: #fff; --btn2-bg-hover: #f4f4f5; --btn2-line: rgba(9, 9, 11, .14);
+    --badge-bg: rgba(8, 145, 178, .08); --badge-line: rgba(8, 145, 178, .32); --badge-text: #155e75;
+    --warn: #92400e; --warn-bg: #fffbeb; --warn-line: #f5cf6b;
+    --err: #b91c1c; --err-bg: #fef2f2; --err-line: #fca5a5;
+    --ok-text: #166534; --ok-bg: #f0fdf4; --ok-line: #86efac; --ok-glow: rgba(22, 163, 74, .3);
+    --term-bg: #fbfbfc; --token: #6d28d9; --token-glow: none; --tok-str: #0e7490;
+    --aurora-a: rgba(139, 92, 246, .2); --aurora-b: rgba(6, 182, 212, .16); --grid-line: rgba(9, 9, 11, .05);
+    --shadow: 0 1px 2px rgba(9, 9, 11, .04), 0 18px 40px -22px rgba(9, 9, 11, .22);
+    --edge: linear-gradient(160deg, rgba(124, 58, 237, .4), rgba(9, 9, 11, .09) 32%, rgba(9, 9, 11, .09) 68%, rgba(8, 145, 178, .36));
+    --acc-line: rgba(124, 58, 237, .35); --acc-bg: rgba(124, 58, 237, .07); --me-bg: rgba(124, 58, 237, .08);
+    --feat-glow: rgba(124, 58, 237, .08); --bar: rgba(124, 58, 237, .12); --bar-line: rgba(124, 58, 237, .38);
+    --ol-bg: rgba(8, 145, 178, .1); --ol-line: rgba(8, 145, 178, .7); --track: rgba(9, 9, 11, .04);
+    --sel: rgba(124, 58, 237, .18); --mark-bg: #09090b; --mark-line: transparent;
   }
 }
+@media (min-width: 768px) { :root { --gutter: 32px; } }
+
+/* base */
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 400 1rem/1.6 var(--sans);
-  overflow-wrap: break-word;
+  margin: 0; min-height: 100vh; position: relative; overflow-x: clip; background: var(--bg); color: var(--text);
+  font: 400 15px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-wrap: break-word;
 }
-.wrap { width: 100%; max-width: 42rem; margin: 0 auto; padding: 0 var(--gutter); }
-a { color: var(--accent-ink); text-underline-offset: 2px; }
-:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+::selection { background: var(--sel); }
+a { color: var(--link); text-decoration-color: var(--link-line); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+main:focus, h1:focus, h2:focus { outline: none; }
 .sr-only {
   position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
 }
-code, pre, kbd { font-family: var(--mono); font-size: 0.9em; }
-
-/* header */
-.top { padding: 20px 0 8px; }
-.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -0.01em; font-size: 1.05rem; }
-.brand svg { width: 28px; height: 28px; flex: none; color: var(--accent); }
-.chip {
-  display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
-  color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; margin-left: 4px;
+code, pre, kbd { font-family: var(--mono); }
+code { font-size: .9em; }
+h1, h2, h3 { margin: 0; font-weight: 600; }
+.wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--gutter); }
+.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.skip {
+  position: absolute; left: 12px; top: 12px; z-index: 300; padding: 10px 14px; border-radius: 10px;
+  background: var(--text); color: var(--bg); font-weight: 600; text-decoration: none; transform: translateY(-200%);
 }
+.skip:focus { transform: none; }
 
-/* intro */
-.intro { padding: 28px 0 20px; }
-.kicker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; font-weight: 550; min-height: 1.6em; }
-.badge {
-  display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 650; letter-spacing: 0.03em;
-  text-transform: uppercase; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 2px 10px;
+/* backdrop: hairline grid + one aurora that settles */
+.backdrop { position: absolute; inset: 0 0 auto; height: 980px; overflow: hidden; pointer-events: none; z-index: 0; }
+.backdrop .grid {
+  position: absolute; inset: 0; background-size: 64px 64px; background-position: center -1px;
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  -webkit-mask-image: radial-gradient(ellipse 72% 62% at 50% 0%, #000 25%, transparent 78%);
+  mask-image: radial-gradient(ellipse 72% 62% at 50% 0%, #000 25%, transparent 78%);
 }
-h1, h2, h3 { line-height: 1.2; letter-spacing: -0.015em; }
-h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(1.9rem, 6.2vw, 2.6rem); margin: 0 0 12px; }
-h1 .room { color: var(--accent-ink); }
-.lede { color: var(--muted); font-size: 1.075rem; margin: 0; max-width: 36rem; }
-.intro[aria-busy="true"] h1 { opacity: 0.7; }
-.needs {
-  margin: 16px 0 0; max-width: 36rem; padding: 10px 14px; font-size: 0.95rem; line-height: 1.55;
-  background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px;
+.backdrop .aurora {
+  position: absolute; left: 50%; top: -320px; width: 1180px; height: 780px; margin-left: -590px;
+  background: radial-gradient(closest-side at 36% 56%, var(--aurora-a), transparent), radial-gradient(closest-side at 66% 44%, var(--aurora-b), transparent);
+  animation: arrive 3.2s var(--ease) both;
 }
-.needs strong { font-weight: 650; }
-.existing { margin: 12px 0 0; max-width: 36rem; font-size: 0.95rem; color: var(--muted); }
-.existing .btn { display: flex; width: fit-content; margin-top: 8px; }
-.chip.dev { color: var(--warn-text); background: var(--warn-bg); border-color: var(--warn-border); }
+@keyframes arrive { from { opacity: 0; transform: translate3d(-3%, -3%, 0) rotate(-4deg) scale(.94); } }
 
-/* callouts */
-.callout { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 18px 0 0; background: var(--surface-2); }
-.callout p { margin: 0; }
-.callout p + p, .callout p + .actions { margin-top: 8px; }
-.callout strong { display: block; margin-bottom: 2px; }
-.callout.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
-.callout.error { background: var(--error-bg); border-color: var(--error-border); color: var(--error-text); }
-.callout .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* top bar */
+.top { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 64px; padding: 10px 0; }
+.brand { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; }
+.mark { width: 28px; height: 28px; flex: none; }
+.mark-bg { fill: var(--mark-bg); stroke: var(--mark-line); }
+.mark-ring { fill: none; stroke: #fafafa; stroke-width: 1.8; }
+.chip { display: inline-flex; align-items: center; padding: 4px 7px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 11px; line-height: 1; color: var(--text-2); }
+.chip.dev { color: var(--warn); border-color: var(--warn-line); background: var(--warn-bg); }
+.nav { display: flex; gap: 2px; }
+.nav a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 10px; border-radius: 8px; font-size: 13.5px; color: var(--text-2); text-decoration: none; }
+.nav a:hover { color: var(--text); background: var(--raise); }
+@media (max-width: 479px) { .nav a.wide-only { display: none; } }
+.rule { position: relative; z-index: 2; height: 1px; background: var(--line); }
+.rule::after { content: ""; position: absolute; left: 50%; top: 0; width: min(560px, 70%); height: 1px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, var(--violet), var(--cyan), transparent); opacity: .55; }
 
-/* cards */
-.card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: clamp(18px, 4.5vw, 30px); margin: 4px 0 28px;
+/* shared surfaces */
+.glass { position: relative; background: var(--glass); border-radius: var(--r-lg); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); }
+.glass::before, .edge::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--edge); pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
-.card h2 { font-size: 1.3rem; margin: 0 0 4px; }
-.card h2.sub { font-size: 1.1rem; margin: 32px 0 8px; }
-.card > p:first-of-type { margin-top: 0; }
+.eyebrow, .kicker, .chip, .pill, .stepper, .spec-title, .needs dt, .term-bar, .prompt-tag, .code-lang, #last-checked, .tool { font-family: var(--mono); font-weight: 500; letter-spacing: .07em; text-transform: uppercase; }
+.eyebrow { margin: 0 0 12px; font-size: 11.5px; line-height: 1.2; color: var(--text-3); }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 11px; line-height: 1; white-space: nowrap; color: var(--text-2); }
+.pill.warn { color: var(--warn); border-color: var(--warn-line); background: var(--warn-bg); }
+.pill.warn::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.actions { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* form */
-.field { margin: 0 0 22px; }
-label { display: block; font-weight: 600; margin: 0 0 2px; }
-.optional { font-weight: 400; color: var(--muted); }
-.hint { margin: 0 0 8px; font-size: 0.92rem; color: var(--muted); }
-input[type="text"], input[type="email"], input[type="datetime-local"], input[type="number"], select {
-  display: block; width: 100%; min-height: 46px; padding: 10px 12px; font: inherit; font-size: 1rem;
-  color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 10px;
-  transition: border-color 120ms ease;
+/* callouts: an optional icon in the first column, the text in the second */
+.callout, .danger {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; align-items: start; margin: 20px 0 0; padding: 14px 16px;
+  border: 1px solid var(--line-2); border-radius: var(--r); background: var(--card); font-size: 14px; line-height: 1.55;
 }
-input:hover { border-color: var(--muted); }
-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; border-color: var(--focus); border-radius: 10px; }
-input[aria-invalid="true"] { border-color: var(--error-text); }
-.field-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.count { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.field-error { margin: 6px 0 0; color: var(--error-text); font-size: 0.92rem; font-weight: 550; }
-.form-alert:empty { display: none; }
-.form-alert { margin: 0 0 18px; }
-.fineprint { font-size: 0.88rem; color: var(--muted); margin: 14px 0 0; }
+.callout:has(> .i), .danger { grid-template-columns: 18px minmax(0, 1fr); }
+.callout > .i, .danger > .i { width: 18px; height: 18px; margin-top: 2px; color: var(--text-2); }
+.callout p, .danger p { margin: 0; }
+.callout strong { display: block; font-weight: 600; margin: 0 0 2px; }
+.callout p + p, .callout p + .actions { margin-top: 10px; }
+.callout.warn, .danger { background: var(--warn-bg); border-color: var(--warn-line); }
+.callout.warn > .i, .callout.warn strong, .danger > .i, .danger strong { color: var(--warn); }
+.callout.error { background: var(--err-bg); border-color: var(--err-line); }
+.callout.error > .i, .callout.error strong { color: var(--err); }
+.danger strong { display: inline; font-weight: 600; }
+.danger p + p { margin-top: 6px; color: var(--text-2); }
 
-/* buttons */
+/* buttons: one primary (gradient + glow), one secondary */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; text-decoration: none;
-  font: inherit; font-weight: 600; font-size: 0.98rem; line-height: 1.2; border-radius: 10px; cursor: pointer;
-  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text);
-  transition: background-color 120ms ease, border-color 120ms ease, transform 60ms ease;
-  text-align: center;
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px;
+  font: inherit; font-weight: 500; font-size: 14.5px; line-height: 1.2; text-align: center; text-decoration: none; cursor: pointer;
+  color: var(--text); background: var(--btn2-bg); border: 1px solid var(--btn2-line); border-radius: 10px;
+  transition: background-color .15s, border-color .15s, box-shadow .2s, filter .15s, transform .08s; -webkit-tap-highlight-color: transparent;
 }
-.btn:hover { background: var(--surface-2); }
+.btn:hover { background: var(--btn2-bg-hover); border-color: var(--line-3); }
 .btn:active { transform: translateY(1px); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-.btn.small { min-height: 36px; padding: 6px 12px; font-size: 0.88rem; }
+.btn.primary { border: 0; padding: 0 20px; font-weight: 600; color: var(--btn-fg); background: var(--grad-btn); box-shadow: var(--glow); }
+.btn.primary:hover { background: var(--grad-btn); filter: brightness(1.07) saturate(1.1); }
+.btn.pulse::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--glow); pointer-events: none; animation: pulse 2.2s ease-in-out 2; }
 .btn.block { width: 100%; }
-.btn[disabled], .btn[aria-disabled="true"] { cursor: progress; opacity: 0.75; }
+.btn.small { min-height: 36px; padding: 0 12px; font-size: 13px; border-radius: 8px; gap: 6px; }
+.btn.small .i { width: 14px; height: 14px; }
+.btn[aria-disabled="true"] { cursor: progress; opacity: .8; }
 /* "Add to Cursor" before the URL is copied: inactive, not busy. */
-a.btn[aria-disabled="true"] { cursor: default; opacity: 0.55; }
-a.btn[aria-disabled="true"]:hover { background: var(--surface); }
-.btn .spinner { display: none; width: 1em; height: 1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+a.btn[aria-disabled="true"] { cursor: default; opacity: .5; }
+a.btn[aria-disabled="true"]:hover { background: var(--btn2-bg); border-color: var(--btn2-line); }
+.btn .spinner { display: none; width: 15px; height: 15px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
 .btn[aria-busy="true"] .spinner { display: inline-block; }
-/* :hover too: .btn.primary:hover (0,3,0) would otherwise repaint the background behind the green "Copied" label while
-   the pointer is still on the button (contrast ~1:1). Same specificity and later, so this wins. */
-.btn.copied, .btn.copied:hover { border-color: var(--ok-text); color: var(--ok-text); background: var(--ok-bg); }
-.callout.warn .btn, .callout.error .btn { color: var(--text); }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* success */
-.success-head { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; }
-.success-head svg { width: 26px; height: 26px; color: var(--ok-text); flex: none; }
-.success-head h1 { margin: 0; outline: none; font-size: clamp(1.5rem, 5vw, 1.9rem); }
-.secret {
-  margin: 18px 0 0; border: 1.5px solid var(--accent); border-radius: 12px; background: var(--accent-soft); padding: 14px;
-}
-.secret-label { font-size: 0.8rem; font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-ink); margin: 0 0 8px; }
-.secret-value {
-  display: block; font-size: 0.95rem; line-height: 1.5; padding: 12px; border-radius: 8px; background: var(--surface);
-  border: 1px solid var(--border); color: var(--text); overflow-wrap: anywhere; word-break: break-all; user-select: all; -webkit-user-select: all;
-}
-.secret .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.danger {
-  margin: 14px 0 0; padding: 14px 16px; border-radius: 12px; background: var(--warn-bg); border: 1px solid var(--warn-border);
-  color: var(--warn-text); display: flex; gap: 12px; align-items: flex-start;
-}
-.danger svg { width: 22px; height: 22px; flex: none; margin-top: 2px; }
-.danger p { margin: 0; }
-.danger p + p { margin-top: 6px; }
-
-/* Returning visitors ("Show me how to connect my AI"): a link-styled entry under the sign-up card, then the connect
-   card without the once-shown URL. */
+.btn[aria-busy="true"] .go { display: none; }
+.btn .ico-ok, .btn.copied .ico-copy { display: none; }
+.btn.copied .ico-ok { display: inline; }
+/* :hover too: .btn.primary:hover (0,3,0) would otherwise repaint the button behind the green "Copied" label while the
+   pointer is still on it. Same specificity and later, so this wins. */
+.btn.copied, .btn.copied:hover { filter: none; background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok-text); }
+.btn.primary.copied { box-shadow: 0 0 0 1px var(--ok-line), 0 0 26px -6px var(--ok-glow); }
+.callout .btn { color: var(--text); }
 .linkbtn {
-  display: inline; min-height: 24px; margin: 0; padding: 2px 0; border: 0; background: none; cursor: pointer;
-  font: inherit; font-weight: 600; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px;
+  display: inline; min-height: 24px; margin: 0; padding: 2px 0; border: 0; background: none; cursor: pointer; font: inherit; font-weight: 500;
+  color: var(--link); text-decoration: underline; text-decoration-color: var(--link-line); text-underline-offset: 3px;
 }
-.linkbtn:hover { text-decoration-thickness: 2px; }
-.returning-entry { margin: -12px 0 28px; padding: 0 2px; color: var(--muted); }
-.back-row { margin: 0 0 10px; font-size: 0.95rem; }
-.returning-head h1 { margin: 0 0 6px; outline: none; font-size: clamp(1.5rem, 5vw, 1.9rem); }
-.returning-lede { margin: 0 0 6px; color: var(--muted); }
-.returning-room { margin: 0; font-size: 0.95rem; }
-.returning-head form { margin: 18px 0 0; }
-.returning-head form .actions { margin: 12px 0 0; }
-#saved-link { font-family: var(--mono); font-size: 0.92rem; }
+.linkbtn:hover { text-decoration-color: currentColor; }
+@keyframes pulse { 0%, 100% { opacity: 0; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 5px; border: 1px solid var(--line-2); border-bottom-width: 2px; background: var(--raise); font: 500 11px/1 var(--mono); color: var(--text-2); vertical-align: 1px; }
+
+/* hero (invite / plain / expired): intro, then the form, then the rest; two columns on wide screens */
+main { position: relative; z-index: 1; }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 32px 0 64px; }
+@media (min-width: 980px) {
+  .hero { grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); grid-template-rows: auto 1fr; gap: 28px 64px; align-items: start; padding: 84px 0 104px; }
+  .signup-col { grid-column: 2; grid-row: 1 / span 2; }
+  .intro-more { grid-row: 2; }
+}
+@media (max-width: 979px) { .signup-col { max-width: 36rem; } }
+@media (min-width: 980px) and (min-height: 860px) { .signup-col { position: sticky; top: 24px; } }
+.kicker { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-height: 26px; margin: 0 0 20px; font-size: 12px; line-height: 1.3; color: var(--text-2); }
+.badge { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px 5px 9px; border-radius: 999px; border: 1px solid var(--badge-line); background: var(--badge-bg); color: var(--badge-text); }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+.intro > .callout { margin: 0 0 24px; max-width: 36rem; }
+.intro h1 { font-size: clamp(2.15rem, 1.2rem + 3.6vw, 3.75rem); line-height: 1.04; letter-spacing: -.045em; margin: 0 0 20px; text-wrap: balance; overflow-wrap: anywhere; }
+.intro[aria-busy="true"] h1 { opacity: .7; }
+.room { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.lede { margin: 0; max-width: 34rem; font-size: 17px; line-height: 1.6; color: var(--text-2); text-wrap: pretty; }
+.trust { list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.trust li { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--raise); font-size: 13px; }
+.trust .i { width: 15px; height: 15px; color: var(--ok-text); }
+@media (max-width: 519px) {
+  .trust { flex-direction: column; gap: 6px; margin-top: 20px; }
+  .trust li { padding: 0; border: 0; background: none; font-size: 14px; }
+  .lede { font-size: 16px; }
+}
+.intro > .callout:not(:first-of-type), #handoff { margin: 20px 0 0; max-width: 36rem; }
+.existing { margin: 16px 2px 0; font-size: 14px; color: var(--text-2); }
+.existing .btn { display: flex; width: fit-content; margin-top: 10px; }
+.returning-entry { margin: 16px 2px 0; font-size: 14px; color: var(--text-2); }
+.intro-more { display: grid; gap: 20px; align-content: start; max-width: 36rem; min-width: 0; }
+
+/* example chat: what your AI shows you before it posts (static, an example) */
+.chat { margin: 0; overflow: hidden; }
+.chat-head { display: flex; align-items: center; gap: 10px; padding: 11px 12px 11px 14px; border-bottom: 1px solid var(--line); font-size: 13.5px; font-weight: 500; color: var(--text-2); }
+.chat-head > .i { color: var(--link); }
+.chat-head > span:first-of-type { flex: 1; min-width: 0; }
+.thread { list-style: none; margin: 0; padding: 16px 14px 18px; display: grid; gap: 12px; background: var(--term-bg); }
+@media (min-width: 520px) { .thread { padding: 18px 18px 20px; } }
+.msg { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+.msg.me { justify-content: flex-end; }
+.bubble { min-width: 0; max-width: min(88%, 30rem); margin: 0; padding: 9px 13px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+.me .bubble { background: var(--me-bg); border: 1px solid var(--acc-line); border-bottom-right-radius: 5px; }
+.ai .bubble { flex: 1; background: var(--glass); border: 1px solid var(--line-2); border-top-left-radius: 5px; }
+.ai .bubble > p { margin: 8px 0 0; }
+.avatar { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 8px; color: var(--link); background: var(--acc-bg); border: 1px solid var(--acc-line); }
+.avatar .i { width: 14px; height: 14px; }
+.tool { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--raise); font-size: 11px; line-height: 1.3; color: var(--text-2); }
+.tool .i { width: 12px; height: 12px; color: var(--link); }
+.approve { margin: 10px 0 2px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--term-bg); font: 12.5px/1.5 var(--mono); overflow: hidden; }
+.approve dl { margin: 0; padding: 10px 12px; display: grid; gap: 4px; }
+.approve dl div { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 10px; }
+.approve dt { color: var(--text-3); }
+.approve dd { margin: 0; }
+.approve dd.v { color: var(--tok-str); }
+.approve-foot { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--warn); }
+.approve-foot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.msg.sys { justify-content: center; }
+.sys-pill { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 0; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--ok-line); background: var(--ok-bg); color: var(--ok-text); font-size: 13px; font-weight: 500; line-height: 1.4; text-align: center; }
+.sys-pill .i { width: 14px; height: 14px; }
+.chat.pre .msg { opacity: 0; }
+.chat.in .msg { animation: pop .5s var(--ease) both; }
+.chat.in .msg:nth-child(2) { animation-delay: .55s; }
+.chat.in .msg:nth-child(3) { animation-delay: 1.6s; }
+.chat.in .msg:nth-child(4) { animation-delay: 2.4s; }
+.chat.in .approve dd { animation: fade .45s 1s both; }
+.chat.in .approve div:nth-child(2) dd { animation-delay: 1.12s; }
+.chat.in .approve div:nth-child(3) dd { animation-delay: 1.24s; }
+.chat.in .approve-foot::before { animation: blink 1.2s 1.4s ease-in-out 3; }
+@keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+
+/* "What you'll need" */
+.needs { border-radius: var(--r); border: 1px solid var(--line); background: var(--card); overflow: hidden; }
+.spec-title { margin: 0; padding: 11px 16px; border-bottom: 1px solid var(--line); font-size: 11.5px; line-height: 1.3; color: var(--text-2); }
+.needs dl { margin: 0; }
+.needs dl > div { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 12px 16px; }
+.needs dl > div + div, .needs > span { border-top: 1px solid var(--line); }
+.needs dt { font-size: 11.5px; line-height: 22px; color: var(--text-3); }
+.needs dd { margin: 0; font-size: 14px; line-height: 1.55; }
+.needs > span { display: block; padding: 12px 16px; font-size: 14px; }
+
+/* signup card */
+.signup { padding: 22px 18px 20px; }
+@media (min-width: 420px) { .signup { padding: 28px 26px 24px; } }
+@media (min-width: 980px) { .signup { padding: 32px 32px 28px; } }
+.stepper { list-style: none; margin: 0 0 24px; padding: 0; display: flex; gap: 6px; font-size: 11.5px; line-height: 1.2; color: var(--text-3); }
+.stepper li { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+.stepper li::before { content: ""; height: 2px; border-radius: 2px; background: var(--line-2); }
+.stepper li[aria-current="step"] { color: var(--text); }
+.stepper li[aria-current="step"]::before { background: var(--grad); box-shadow: 0 0 12px -1px var(--violet); }
+.stepper li.done { color: var(--ok-text); }
+.stepper li.done::before { background: var(--ok-text); opacity: .75; }
+.stepper li.done > span:first-child::before { content: "\2713\00a0" / ""; }
+.signup h2 { font-size: 21px; letter-spacing: -.025em; line-height: 1.25; }
+.signup .lead-hint { margin: 6px 0 24px; font-size: 14px; }
+.field { margin: 0 0 20px; }
+.field-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+label { display: block; margin: 0 0 4px; font-size: 14px; font-weight: 500; }
+.optional { font-weight: 400; color: var(--text-3); }
+.hint { margin: 0 0 10px; font-size: 13px; line-height: 1.55; color: var(--text-2); }
+input[type="text"], input[type="email"], input[type="datetime-local"], input[type="number"], select {
+  display: block; width: 100%; min-width: 0; height: 46px; padding: 0 14px; font: inherit; font-size: 16px; color: var(--text);
+  background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 10px; transition: border-color .15s, box-shadow .15s;
+}
+input:hover, select:hover { border-color: var(--text-3); }
+/* transparent outline: invisible normally, drawn in system colours in forced-colours mode */
+input:focus-visible, select:focus-visible { outline: 2px solid transparent; outline-offset: 2px; border-color: var(--focus); box-shadow: 0 0 0 2px var(--focus), 0 0 0 6px var(--focus-ring); border-radius: 10px; }
+input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--err); }
+input[aria-invalid="true"]:focus-visible { box-shadow: 0 0 0 2px var(--err), 0 0 0 6px var(--err-bg); }
+.count { font: 12px var(--mono); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.field-error { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--err); }
+.more { margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: var(--text-2); }
+.more summary { display: inline-flex; align-items: center; gap: 8px; min-height: 28px; cursor: pointer; list-style: none; }
+.more summary::-webkit-details-marker, .quick > summary::-webkit-details-marker { display: none; }
+.more summary::before, .quick > summary::before { content: ""; flex: none; width: 6px; height: 6px; margin: 0 2px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); transition: transform .15s; }
+.more[open] summary::before, .quick[open] > summary::before { transform: rotate(45deg); }
+.more summary:hover { color: var(--text); }
+.more .hint { margin: 2px 0 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--raise); }
+.form-alert:empty { display: none; }
+.form-alert { margin: 0 0 16px; }
+.form-alert .callout { margin: 0; }
+.signup .btn.primary { min-height: 48px; font-size: 15px; }
+.fineprint { display: flex; align-items: flex-start; gap: 8px; margin: 14px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text-3); }
+.fineprint .i { width: 13px; height: 13px; margin-top: 3px; }
+
+/* connect card: after sign-up (two columns on wide screens), or with a saved link */
+.success { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 32px 0 64px; }
+@media (min-width: 1024px) { .success { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 32px; align-items: start; padding: 56px 0 96px; } }
+@media (min-width: 1160px) { .success { grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 48px; } }
+@media (min-width: 1024px) and (min-height: 1000px) { .save-col { position: sticky; top: 24px; } }
+.save-col, .connect-col { min-width: 0; }
+.head-row { display: flex; gap: 14px; align-items: flex-start; }
+.ok-orb { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 12px; margin-top: 2px; color: var(--ok-text); background: var(--ok-bg); border: 1px solid var(--ok-line); box-shadow: 0 0 26px -6px var(--ok-glow); }
+.ok-orb .i { width: 22px; height: 22px; stroke-width: 2.2; }
+.head-row .eyebrow { margin: 4px 0 8px; color: var(--ok-text); }
+.success h1 { font-size: clamp(1.7rem, 1.25rem + 1.5vw, 2.25rem); line-height: 1.1; letter-spacing: -.035em; text-wrap: balance; }
+@media (min-width: 1024px) { .success h1 { font-size: 1.8rem; } }
+.h1-2 { display: block; }
+.joined { margin: 16px 0 0; font-size: 15px; color: var(--text-2); }
+.back-row { margin: 0 0 14px; font-size: 14px; }
+.back-row .linkbtn::before { content: "\2190\00a0" / ""; }
+.returning-lede { margin: 12px 0 0; color: var(--text-2); }
+.returning-room { margin: 8px 0 0; font-size: 14px; color: var(--text-2); }
+.returning-head form { margin: 20px 0 0; padding: 18px; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: var(--card); }
+.returning-head form .actions { margin: 14px 0 0; }
+#saved-link { font-family: var(--mono); font-size: 14px; }
+
+/* the once-shown URL, as a terminal */
+.secret { margin: 24px 0 0; overflow: hidden; }
+.term-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 14px; border-bottom: 1px solid var(--line); font-size: 11.5px; line-height: 1.2; color: var(--text-2); }
+.dots { display: inline-flex; gap: 5px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--line-3); }
+.secret-label { margin: 0; flex: 1; min-width: 0; }
+.term-body { display: flex; gap: 10px; padding: 18px 16px 18px 14px; background: var(--term-bg); }
+.term-prompt { font: 500 14px/1.7 var(--mono); color: var(--violet); user-select: none; -webkit-user-select: none; }
+/* the base breaks at its <wbr>s (after each "/") and, only where a segment can't fit (the 41-character production
+   host on a phone, 400% zoom, text spacing), anywhere: overflow-wrap: anywhere from .secret-value. Never clipped. */
+.secret-value { display: block; flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.7; color: var(--text); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
+@media (min-width: 420px) { .secret-value { font-size: 14px; } }
+.url-base { color: var(--text-2); }
+.url-token { color: var(--token); text-shadow: var(--token-glow); word-break: break-all; }
+.secret-value.landed .url-token::after { content: ""; display: inline-block; width: .55em; height: 1.1em; margin-left: 2px; vertical-align: -.18em; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: blink 1s steps(2, jump-none) 3; }
+@keyframes blink { 50% { opacity: 0; } }
+.term-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.term-meta { font: 11.5px/1.4 var(--mono); color: var(--text-2); }
+@media (max-width: 419px) { .term-foot .btn.primary { width: 100%; } }
+.save-col > .callout, .save-col > .danger { margin: 14px 0 0; }
+
+/* "Is your AI connected?" checklist. A row's state is its text and the .done class; the icon (an empty ring, then a
+   filled ring with a tick) and the colour only repeat it. */
+.status { margin: 14px 0 0; padding: 16px; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: var(--card); }
+.status h2 { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; font-size: 15px; letter-spacing: -.01em; }
+.status h2::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 14px; }
+.status-row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
+.status-icon { display: block; width: 22px; height: 22px; margin-top: 0; }
+.status-icon circle { fill: none; stroke: var(--text-3); stroke-width: 1.6; stroke-dasharray: 3.2 2.6; }
+.status-icon path { display: none; fill: none; stroke: var(--bg); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.status-row.done .status-icon circle { fill: var(--ok-text); stroke: var(--ok-text); stroke-dasharray: none; }
+.status-row.done .status-icon path { display: inline; }
+.status-row .if-done { display: none; }
+.status-row.done .if-pending { display: none; }
+.status-row.done .if-done { display: inline; font-weight: 500; color: var(--ok-text); }
+.status-privacy { margin: 12px 0 0; font-size: 12.5px; color: var(--text-3); }
+.status-note { margin: 8px 0 0; font-size: 13px; font-weight: 500; }
+.status-note:empty { margin: 0; }
+.status .actions, .status #status-check-start { margin: 12px 0 0; }
+/* At the page's request cap: inactive, not busy. */
+#status-check-now[aria-disabled="true"] { cursor: not-allowed; opacity: .55; }
+#status-check-now[aria-disabled="true"]:hover { background: var(--btn2-bg); }
+
+/* connect steps: a command palette */
+.palette { overflow: hidden; }
+.pal-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.pal-head > .i { width: 18px; height: 18px; color: var(--text-3); }
+.pal-head h2 { flex: 1; font-size: 16px; letter-spacing: -.015em; }
+.pal-hint { display: none; align-items: center; gap: 4px; font: 11.5px/1 var(--mono); color: var(--text-3); }
+@media (hover: hover) and (min-width: 760px) { .pal-hint { display: inline-flex; } }
+.pal-body { display: grid; }
+.tablist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 10px; border-bottom: 1px solid var(--line); }
+.tab {
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; min-width: 0;
+  font: inherit; font-size: 14px; font-weight: 500; line-height: 1.25; text-align: left; cursor: pointer;
+  color: var(--text-2); background: transparent; border: 1px solid var(--line); border-radius: 10px;
+}
+.tab:last-child { grid-column: 1 / -1; }
+.tab:hover { color: var(--text); background: var(--raise); }
+.tab[aria-selected="true"] { color: var(--text); background: var(--tab-sel); border-color: var(--line-3); }
+.tab[aria-selected="true"]::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 2px; background: var(--grad); }
+.tab-ico { display: grid; width: 28px; height: 28px; flex: none; place-items: center; border-radius: 8px; border: 1px solid var(--line-2); background: var(--raise); font: 600 10.5px/1 var(--mono); letter-spacing: -.02em; color: var(--text-2); }
+.tab[aria-selected="true"] .tab-ico { color: var(--link); border-color: var(--acc-line); background: var(--acc-bg); }
+.tab-txt { display: flex; flex-direction: column; min-width: 0; }
+.tab-meta { display: none; margin-top: 2px; font: 12px/1.2 var(--mono); color: var(--text-3); }
+@media (min-width: 760px) {
+  .pal-body { grid-template-columns: 214px minmax(0, 1fr); }
+  .tablist { display: flex; flex-direction: column; gap: 2px; padding: 8px; border-bottom: 0; border-right: 1px solid var(--line); }
+  .tab { min-height: 50px; white-space: nowrap; border-color: transparent; }
+  .tab[aria-selected="true"] { border-color: var(--line-2); }
+  .tab-ico { width: 30px; height: 30px; }
+  .tab-meta { display: block; }
+}
+.tabpanel { min-width: 0; padding: 18px 16px 20px; font-size: 14.5px; }
+.tabpanel:focus-visible { outline-offset: -2px; }
+@media (min-width: 760px) { .tabpanel { padding: 20px 24px 24px; } }
+.tabpanel > p { margin: 0 0 12px; }
+.tabpanel > p.actions, .cursor-actions { margin: 4px 0 12px; }
+.tabpanel li .url-copy { margin: 8px 0 0; }
+.cursor-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cursor-actions > p { margin: 0; }
+.no-button { display: none; }
+#panel-cursor:has(#cursor-install-row[hidden]) .if-button { display: none; }
+#panel-cursor:has(#cursor-install-row[hidden]) .no-button { display: inline; }
+.tabpanel ol { list-style: none; counter-reset: s; margin: 0 0 8px; padding: 0; }
+.tabpanel li { counter-increment: s; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+.tabpanel li:first-child { border-top: 0; padding-top: 2px; }
+.tabpanel li::before { content: counter(s, decimal-leading-zero); font: 500 11.5px/23px var(--mono); color: var(--text-3); }
+.ui { font-weight: 500; font-size: .93em; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--raise); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.tabpanel a .i { width: 12px; height: 12px; margin-left: 3px; vertical-align: -1px; }
+.note { position: relative; margin: 14px 0 0; padding: 12px 14px 12px 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--raise); font-size: 13px; line-height: 1.55; color: var(--text-2); }
+.note::before { content: "i" / ""; position: absolute; left: 14px; top: 13.5px; display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid var(--text-3); font: 600 9.5px/1 var(--mono); color: var(--text-3); }
+.note code, .tabpanel p code { color: var(--text); }
+.codeblock { margin: 0 0 4px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--term-bg); overflow: hidden; }
+.code-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 5px 5px 14px; border-bottom: 1px solid var(--line); }
+.code-lang { min-width: 0; font-size: 11.5px; line-height: 1.3; letter-spacing: .04em; text-transform: none; color: var(--text-3); overflow-wrap: anywhere; }
+.codeblock pre { margin: 0; padding: 14px 16px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all; font-size: 13px; line-height: 1.7; }
+.codeblock pre code { font-size: inherit; }
+.codeblock pre.shell::before { content: "$ " / ""; color: var(--text-3); }
 .fill-first { display: none; }
 #success.awaiting-link .fill-first { display: block; }
 #success.awaiting-link .codeblock,
 #success.awaiting-link .url-copy,
 #success.awaiting-link #cursor-install-row,
 #success.awaiting-link #cursor-gate { display: none; }
-
-/* "Is your AI connected?" checklist. A row's state is its text and the .done class; the icon (an empty ring, then a
-   filled ring with a tick) and the colour only repeat it. */
-.status { margin: 18px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
-.card .status h2 { font-size: 1.05rem; margin: 0 0 10px; outline: none; }
-.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.status-row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
-.status-icon { display: block; width: 22px; height: 22px; margin-top: 1px; }
-.status-icon circle { fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-dasharray: 3.2 2.6; }
-.status-icon path { display: none; fill: none; stroke: var(--surface); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.status-row.done .status-icon circle { fill: var(--ok-text); stroke: var(--ok-text); stroke-dasharray: none; }
-.status-row.done .status-icon path { display: inline; }
-.status-row .if-done { display: none; }
-.status-row.done .if-pending { display: none; }
-.status-row.done .if-done { display: inline; font-weight: 600; color: var(--ok-text); }
-.status-privacy { margin: 12px 0 0; font-size: 0.88rem; color: var(--muted); }
-.status-note { margin: 8px 0 0; font-size: 0.92rem; font-weight: 550; }
-.status-note:empty { margin: 0; }
-.status .actions { margin: 10px 0 0; }
-.status #status-check-start { margin: 10px 0 0; }
-/* At the page's request cap: inactive, not busy. */
-#status-check-now[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
-#status-check-now[aria-disabled="true"]:hover { background: var(--surface); }
-
-/* tabs */
-.tablist { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px; background: var(--surface-2); border-radius: 12px; border: 1px solid var(--border); }
-.tab {
-  flex: 1 1 auto; min-height: 40px; padding: 8px 12px; font: inherit; font-weight: 600; font-size: 0.92rem; color: var(--muted);
-  background: transparent; border: 1px solid transparent; border-radius: 9px; cursor: pointer; white-space: nowrap;
-}
-.tab:hover { color: var(--text); }
-.tab[aria-selected="true"] { background: var(--surface); color: var(--text); border-color: var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
-.tabpanel { padding: 16px 2px 0; }
-.tabpanel ol { margin: 0; padding-left: 1.3rem; }
-.tabpanel li { margin: 0 0 8px; }
-.tabpanel li::marker { color: var(--muted); font-weight: 600; }
-.tabpanel .note, .card > .note { font-size: 0.9rem; color: var(--muted); margin: 12px 0 0; }
-.tabpanel p.actions { margin: 12px 0 0; }
-.tabpanel kbd { padding: 0 5px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface); }
-.ui { font-weight: 600; }
-
-.codeblock { position: relative; margin: 8px 0 0; }
-.codeblock pre {
-  margin: 0; padding: 12px 14px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
-  white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all; font-size: 0.86rem; line-height: 1.55;
-}
-.codeblock .actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+#last-checked { margin: 0; padding: 11px 16px; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: var(--raise); font-size: 11.5px; line-height: 1.5; letter-spacing: .02em; text-transform: none; color: var(--text-3); }
+#last-checked::before { content: none; }
 
 /* prompts */
-.prompts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.prompt { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: var(--surface-2); }
-.prompt p { margin: 0 0 8px; font-family: var(--serif); font-size: 1.06rem; line-height: 1.45; }
-.prompt .actions { display: flex; justify-content: flex-end; }
+.say { margin: 36px 0 0; }
+.say h2 { font-size: 18px; letter-spacing: -.02em; }
+.say > .hint { margin: 4px 0 0; font-size: 14px; }
+.prompts { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+@media (min-width: 640px) { .prompts { grid-template-columns: 1fr 1fr; } }
+.prompt { display: flex; flex-direction: column; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: var(--glass); box-shadow: var(--shadow); }
+.prompt p { flex: 1; margin: 0; padding: 16px 16px 8px; font-size: 15px; line-height: 1.55; }
+.prompt .actions { align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px 12px 16px; }
+.prompt-tag { font-size: 12px; line-height: 1.2; color: var(--text-3); }
+.connect-col > .fineprint { margin-top: 22px; }
 
 /* "No AI app yet?" lane: the script builds it only when QUICK_AVAILABILITY is true */
-.quick { margin: 28px 0 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
-.quick > summary { cursor: pointer; padding: 12px 14px; min-height: 44px; font-weight: 600; border-radius: 12px; }
-.quick[open] > summary { border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
-.quick-body { padding: 14px 12px 4px; }
+.quick { margin: 28px 0 0; border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--card); }
+.quick > summary { display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; padding: 12px 16px; min-height: 44px; font-weight: 500; border-radius: var(--r-lg); }
+.quick[open] > summary { border-bottom: 1px solid var(--line); border-radius: var(--r-lg) var(--r-lg) 0 0; }
+.quick-body { padding: 14px 14px 4px; }
 .quick-body p { margin: 0 0 10px; }
 .quick .field-error { margin: 6px 0 0; }
 .quick .callout { margin: 0 0 12px; }
-.quick .callout p { margin: 0; }
-.quick .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
-.quick fieldset { min-width: 0; margin: 0 0 12px; padding: 8px 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
-.quick legend { padding: 0 4px; font-weight: 600; }
+.quick .actions { margin: 0 0 12px; }
+.quick fieldset { min-width: 0; margin: 0 0 12px; padding: 8px 12px 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--raise); }
+.quick legend { padding: 0 4px; font-weight: 500; }
 .quick .pair, .quick .money-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-.quick input, .quick select { min-width: 0; }
 .quick .slot-actions { margin: 8px 0 0; }
-.quick pre {
-  margin: 0 0 10px; padding: 12px 14px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
-  white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.88rem; line-height: 1.55;
-}
+.quick pre { margin: 0 0 10px; padding: 12px 14px; background: var(--term-bg); border: 1px solid var(--line-2); border-radius: 10px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.6; }
 .quick ul { margin: 0 0 10px; padding-left: 1.2rem; }
 .quick-done strong { color: var(--ok-text); }
+.say > .quick { margin: 0 0 28px; }
 @media (min-width: 560px) {
   .quick-body { padding: 16px 16px 4px; }
   .quick .pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -329,95 +521,251 @@ a.btn[aria-disabled="true"]:hover { background: var(--surface); }
 }
 
 /* about */
-.about { padding: 8px 0 8px; }
-.about h2 { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; margin: 28px 0 10px; }
-.about p { margin: 0 0 12px; }
-.steps { list-style: none; counter-reset: step; padding: 0; margin: 16px 0 0; display: grid; gap: 12px; }
-.steps li { counter-increment: step; display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
-.steps li::before {
-  content: counter(step); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
-  background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; font-size: 0.95rem;
-}
-.privacy { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
-.privacy li { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.privacy b, .steps b { display: block; }
-.privacy span, .steps span { color: var(--muted); font-size: 0.95rem; }
-footer { padding: 24px 0 40px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 28px; }
-footer p { margin: 0 0 4px; }
-.noscript { margin: 16px 0; }
+.about { padding: 72px 0 24px; border-top: 1px solid var(--line); }
+.about-grid { display: grid; gap: 40px; }
+@media (min-width: 980px) { .about-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: center; } }
+.about h2, .privacy h2 { font-size: clamp(1.65rem, 1.2rem + 1.3vw, 2.3rem); line-height: 1.1; letter-spacing: -.035em; margin: 0 0 14px; }
+.about-body { margin: 0; max-width: 34rem; color: var(--text-2); font-size: 16px; }
+.flow { list-style: none; counter-reset: f; margin: 32px 0 0; padding: 0; }
+.flow li { counter-increment: f; position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 16px; padding: 0 0 22px; }
+.flow li:last-child { padding-bottom: 0; }
+.flow li::before { content: counter(f, decimal-leading-zero); display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--glass); font: 500 12px/1 var(--mono); }
+.flow li:not(:last-child)::after { content: ""; position: absolute; left: 17.5px; top: 42px; bottom: 6px; width: 1px; background: linear-gradient(var(--line-3), transparent); }
+.flow b { display: block; font-weight: 600; font-size: 15px; margin-top: 6px; }
+.flow span { display: block; font-size: 14px; color: var(--text-2); }
+.viz { margin: 0; overflow: hidden; }
+.viz-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); font: 500 11.5px/1.3 var(--mono); color: var(--text-2); }
+.viz-body { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 0 12px; padding: 26px 18px 6px 16px; }
+@media (min-width: 420px) { .viz-body { grid-template-columns: 64px minmax(0, 1fr); } }
+.viz-labels, .viz-tracks { display: grid; grid-auto-rows: 24px; row-gap: 14px; }
+.viz-labels span { font: 500 11.5px/24px var(--mono); color: var(--text-2); white-space: nowrap; }
+.viz-tracks { position: relative; }
+.viz-track { position: relative; display: block; border-radius: 6px; background: var(--track); }
+.viz-bar { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: var(--bar); border: 1px solid var(--bar-line); transform-origin: left center; }
+.viz-bar.r1 { left: 6%; width: 56%; }
+.viz-bar.r2 { left: 26%; width: 66%; }
+.viz-bar.r3 { left: 2%; width: 68%; }
+.viz-bar.r4 { left: 34%; width: 50%; }
+.viz-ol { position: absolute; z-index: 1; left: 34%; width: 28%; top: -12px; height: 158px; border-radius: 8px; border: 1px solid var(--ol-line); background: var(--ol-bg); box-shadow: 0 0 34px -8px var(--cyan), inset 0 0 18px -6px var(--cyan); }
+.viz-axis { display: flex; justify-content: space-between; align-items: end; font: 11.5px/1 var(--mono); color: var(--text-3); padding-top: 6px; }
+.viz-result { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 16px 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--term-bg); font: 12px/1.4 var(--mono); }
+.viz-result .i { width: 14px; height: 14px; color: var(--ok-text); }
+.viz-result span:last-child { color: var(--text-3); margin-left: auto; }
+.viz figcaption { margin: 16px 0 0; padding: 12px 16px 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--text-2); }
+.viz.pre .viz-bar { transform: scaleX(0); }
+.viz.pre .viz-ol, .viz.pre .viz-result { opacity: 0; }
+.viz.in .viz-bar { animation: grow .9s var(--ease) both; }
+.viz.in .viz-bar.r2 { animation-delay: .08s; }
+.viz.in .viz-bar.r3 { animation-delay: .16s; }
+.viz.in .viz-bar.r4 { animation-delay: .24s; }
+.viz.in .viz-ol, .viz.in .viz-result { animation: fade .6s .9s var(--ease) both; }
+@keyframes grow { from { transform: scaleX(0); } }
+@keyframes fade { from { opacity: 0; } }
 
-@media (min-width: 560px) {
-  .privacy { grid-template-columns: 1fr 1fr; }
-  .privacy li:last-child { grid-column: 1 / -1; }
+/* privacy */
+.privacy { padding: 72px 0 56px; }
+.bento { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 12px; }
+@media (min-width: 640px) { .bento { grid-template-columns: 1fr 1fr; } .bento .feat { grid-column: 1 / -1; } }
+@media (min-width: 980px) { .bento { grid-template-columns: repeat(6, minmax(0, 1fr)); } .bento li { grid-column: span 2; } .bento li:nth-child(-n + 2) { grid-column: span 3; } }
+.bento li { position: relative; padding: 20px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--card); }
+.bento .ico { display: grid; place-items: center; width: 34px; height: 34px; margin: 0 0 16px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--glass); }
+.bento .ico .i { width: 17px; height: 17px; }
+.bento b { display: block; font-weight: 600; font-size: 15px; letter-spacing: -.01em; margin: 0 0 4px; }
+.bento li > span:last-child { display: block; font-size: 14px; color: var(--text-2); }
+.bento .feat { border-color: transparent; background: radial-gradient(120% 160% at 0% 0%, var(--feat-glow), transparent 60%), var(--card); }
+.bento .feat b { font-size: 18px; letter-spacing: -.02em; }
+.bento .feat .ico { color: var(--link); border-color: var(--acc-line); background: var(--acc-bg); }
+
+footer { position: relative; z-index: 1; border-top: 1px solid var(--line); padding: 26px 0 80px; font-size: 13px; color: var(--text-3); }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+footer p { margin: 0; max-width: 40rem; }
+.foot-tag { font: 11.5px/1.6 var(--mono); letter-spacing: .04em; }
+.noscript { margin: 0; }
+
+/* touch screens: 44px targets (desktop sizes unchanged); after every rule it overrides */
+@media (pointer: coarse) {
+  .btn.small, .nav a, .more summary { min-height: 44px; }
+  .linkbtn { display: inline-flex; align-items: center; min-height: 44px; text-align: left; }
 }
+
+/* motion (every animation is finite), print, forced colours */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media print { .backdrop { display: none; } .chat.pre .msg { opacity: 1; } .viz.pre .viz-bar { transform: none; } .viz.pre .viz-ol, .viz.pre .viz-result { opacity: 1; } }
+@media (forced-colors: active) {
+  .room { color: CanvasText; background: none; }
+  .glass::before, .edge::before { display: none; }
+  .glass, .needs, .callout, .danger, .prompt, .bento li, .status, .bubble, .sys-pill { border: 1px solid CanvasText; }
+  .btn.primary { border: 1px solid ButtonText; }
+  .stepper li::before { forced-color-adjust: none; background: CanvasText; }
+  .stepper li[aria-current="step"]::before { height: 4px; background: Highlight; }
+  .tab[aria-selected="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .tab[aria-selected="true"]:focus-visible { outline-width: 3px; outline-offset: 2px; }
+  .status-row.done .status-icon circle { fill: CanvasText; stroke: CanvasText; }
+  .status-icon path { stroke: Canvas; }
 }
 </style>
 </head>
 <body>
+<svg hidden aria-hidden="true" focusable="false">
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5l9 16H3l9-16z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6L12 3z"/><path d="M8.8 12.2l2.3 2.3 4.3-4.6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6L12 3z"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M8 7.5h.01M8 16.5h.01"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M11 3.5l1.9 5.6 5.6 1.9-5.6 1.9L11 18.5l-1.9-5.6L3.5 11l5.6-1.9z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z"/></symbol>
+  <symbol id="i-tool" viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h7"/><circle cx="17" cy="7" r="2"/><circle cx="14" cy="17" r="2"/></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0V8zM12 16.5V21"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-braces" viewBox="0 0 24 24"><path d="M8 4c-2 0-2.5 1-2.5 3v2c0 1.5-.8 2.5-2 3 1.2.5 2 1.5 2 3v2c0 2 .5 3 2.5 3M16 4c2 0 2.5 1 2.5 3v2c0 1.5.8 2.5 2 3-1.2.5-2 1.5-2 3v2c0 2-.5 3-2.5 3"/></symbol>
+</svg>
+<a class="skip" href="#main">Skip to content</a>
+<div class="backdrop" aria-hidden="true"><div class="aurora"></div><div class="grid"></div></div>
+
 <div class="wrap">
   <header class="top">
     <span class="brand">
-      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="8" fill="currentColor"/><circle cx="12.5" cy="16" r="6" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="19.5" cy="16" r="6" fill="none" stroke="#fff" stroke-width="2.5"/></svg>
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><defs><linearGradient id="mark-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><rect class="mark-bg" x=".5" y=".5" width="31" height="31" rx="8.5"/><circle class="mark-ring" cx="12.75" cy="16" r="6.25"/><circle class="mark-ring" cx="19.25" cy="16" r="6.25"/><path d="M16 10.66A6.25 6.25 0 0 1 16 21.34A6.25 6.25 0 0 1 16 10.66Z" fill="url(#mark-g)"/></svg>
       Rendezvous <span class="chip">Preview</span><span class="chip dev" id="dev-chip" hidden>Local API</span>
     </span>
+    <nav class="nav" aria-label="On this page">
+      <a href="#about-title" class="wide-only">How it works</a>
+      <a href="#privacy-title">Privacy</a>
+    </nav>
   </header>
+</div>
+<div class="rule" aria-hidden="true"></div>
 
-  <main id="main">
+<main id="main" class="wrap" tabindex="-1">
+  <div class="hero" id="hero">
     <section class="intro" id="intro" aria-labelledby="headline">
       <p class="kicker" id="kicker"><span class="badge" id="kind-badge" hidden></span><span id="kicker-text">Group plans, made by your AIs</span></p>
-      <h1 id="headline">Plan together, each with your own AI.</h1>
-      <p class="lede" id="lede">Rendezvous is a shared room where everyone's AI (Claude, ChatGPT or another) works out a group trip or meeting. Sign up to get your personal link, then connect it to the AI you already use.</p>
-      <p class="needs" id="needs"><strong>What you'll need:</strong> an AI app that lets you add a custom connector (MCP), such as Claude, ChatGPT on the web, Claude Code or Cursor. It's easiest on a computer and takes a few minutes. Claude's Free plan allows one custom connector; on Claude Team or Enterprise you can't add a personal one yourself.</p>
-      <div class="callout" id="handoff" hidden>
-        <p><strong>On a phone?</strong> Your private link is shown only once, and you'll paste it into your AI on a computer. Easiest: send this invite to yourself and sign up there.</p>
-        <p class="actions"><button type="button" class="btn small" id="handoff-btn"><span class="label" id="handoff-label">Send this invite to myself</span></button></p>
-      </div>
-      <p class="existing" id="existing-user" hidden>Already signed up, maybe on your phone? Don't create a second account: it would leave an extra you in the room who never posts.</p>
       <div class="callout" id="invite-callout" hidden>
-        <p><strong id="callout-title"></strong><span id="callout-body"></span></p>
-        <p class="actions" id="callout-actions" hidden><button type="button" class="btn small" id="retry-invite">Try again</button></p>
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg>
+        <div>
+          <p><strong id="callout-title"></strong><span id="callout-body"></span></p>
+          <p class="actions" id="callout-actions" hidden><button type="button" class="btn small" id="retry-invite">Try again</button></p>
+        </div>
+      </div>
+      <h1 id="headline">Plan together, each with <span class="room">your own AI</span>.</h1>
+      <p class="lede" id="lede">Rendezvous is a shared room where everyone's AI (Claude, ChatGPT or another) works out a group trip or meeting. Sign up to get your personal link, then connect it to the AI you already use.</p>
+      <ul class="trust" aria-label="How your information is handled">
+        <li><svg class="i" aria-hidden="true" focusable="false"><use href="#i-shield-ok"/></svg>Your AI shares only what you approve</li>
+        <li><svg class="i" aria-hidden="true" focusable="false"><use href="#i-server"/></svg>No AI on our servers</li>
+        <li><svg class="i" aria-hidden="true" focusable="false"><use href="#i-lock"/></svg>Your link is shown once</li>
+      </ul>
+      <div class="callout" id="handoff" hidden>
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-phone"/></svg>
+        <div>
+          <p><strong>On a phone?</strong> Your private link is shown only once, and you'll paste it into your AI on a computer. Easiest: send this invite to yourself and sign up there.</p>
+          <p class="actions"><button type="button" class="btn small" id="handoff-btn"><span class="label" id="handoff-label">Send this invite to myself</span></button></p>
+        </div>
       </div>
     </section>
 
     <noscript><div class="callout error noscript"><p><strong>JavaScript is needed to sign up.</strong>Please enable it for this page and reload.</p></div></noscript>
 
-    <section class="card" id="signup-card" aria-labelledby="signup-title">
-      <h2 id="signup-title">Create your account</h2>
-      <p class="hint">No password: you'll get one private link that connects your AI to Rendezvous.</p>
-      <form id="signup-form" method="post" novalidate>
-        <div class="field">
-          <div class="field-row">
-            <label for="display-name">Display name</label>
-            <span class="count" id="name-count" aria-hidden="true">0/60</span>
+    <div class="signup-col">
+      <section class="signup glass" id="signup-card" aria-labelledby="signup-title">
+        <ol class="stepper" aria-label="Setup steps">
+          <li aria-current="step"><span>Account</span></li>
+          <li><span>Save link</span></li>
+          <li><span>Connect AI</span></li>
+        </ol>
+        <h2 id="signup-title">Create your account</h2>
+        <p class="hint lead-hint">No password: you'll get one private link that connects your AI to Rendezvous.</p>
+        <form id="signup-form" method="post" novalidate>
+          <div class="field">
+            <div class="field-row">
+              <label for="display-name">Display name</label>
+              <span class="count" id="name-count" aria-hidden="true">0/60</span>
+            </div>
+            <p class="hint" id="name-hint">The other people in your rooms, and their AIs, will see this name. A first name is plenty.</p>
+            <input id="display-name" name="display_name" type="text" required maxlength="60" autocomplete="nickname" autocapitalize="words" spellcheck="false" aria-describedby="name-hint name-error">
+            <p class="field-error" id="name-error" hidden></p>
           </div>
-          <p class="hint" id="name-hint">The other people in your rooms, and their AIs, will see this name. A first name is plenty.</p>
-          <input id="display-name" name="display_name" type="text" required maxlength="60" autocomplete="nickname" autocapitalize="words" spellcheck="false" aria-describedby="name-hint name-error">
-          <p class="field-error" id="name-error" hidden></p>
-        </div>
-        <div class="field">
-          <label for="email">Email <span class="optional">(optional)</span></label>
-          <p class="hint" id="email-hint">Email notifications aren't switched on yet, so for now nothing is sent. If you add an address, it's kept for when they are, and then used only to tell you that someone posted in one of your rooms, never what they posted. No marketing. Leave it blank if you'd rather not.</p>
-          <input id="email" name="email" type="email" maxlength="200" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" aria-describedby="email-hint email-error">
-          <p class="field-error" id="email-error" hidden></p>
-        </div>
-        <div class="form-alert" id="form-alert"></div>
-        <button type="submit" class="btn primary block" id="submit-btn"><span class="spinner" aria-hidden="true"></span><span id="submit-label">Create my account</span></button>
-        <p class="fineprint">No cookies, no trackers. This page doesn't save anything in your browser.</p>
-      </form>
-    </section>
-    <p class="returning-entry" id="returning-entry" hidden>Already have your link? <button type="button" class="linkbtn" id="existing-connect-btn">Show me how to connect my AI</button></p>
+          <div class="field">
+            <label for="email">Email <span class="optional">(optional)</span></label>
+            <p class="hint" id="email-short">Nothing is sent yet, no marketing.</p>
+            <input id="email" name="email" type="email" maxlength="200" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" aria-describedby="email-short email-hint email-error">
+            <p class="field-error" id="email-error" hidden></p>
+            <details class="more">
+              <summary>How your email would be used</summary>
+              <p class="hint" id="email-hint">Email notifications aren't switched on yet, so for now nothing is sent. If you add an address, it's kept for when they are, and then used only to tell you that someone posted in one of your rooms, never what they posted. No marketing. Leave it blank if you'd rather not.</p>
+            </details>
+          </div>
+          <div class="form-alert" id="form-alert"></div>
+          <button type="submit" class="btn primary block" id="submit-btn"><span class="spinner" aria-hidden="true"></span><span id="submit-label">Create my account</span><svg class="i go" aria-hidden="true" focusable="false"><use href="#i-go"/></svg></button>
+          <p class="fineprint"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-shield"/></svg><span>No cookies, no trackers. This page doesn't save anything in your browser.</span></p>
+        </form>
+      </section>
+      <p class="returning-entry" id="returning-entry" hidden>Already have your link? <button type="button" class="linkbtn" id="existing-connect-btn">Show me how to connect my AI</button></p>
+      <p class="existing" id="existing-user" hidden>Already signed up, maybe on your phone? Don't create a second account: it would leave an extra you in the room who never posts.</p>
+    </div>
 
-    <section class="card" id="success" aria-labelledby="success-title" hidden>
+    <div class="intro-more" id="intro-more">
+      <figure class="chat glass" id="chat" aria-labelledby="chat-title">
+        <figcaption class="chat-head"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-chat"/></svg><span id="chat-title">What happens next, in your AI</span> <span class="pill">Example</span></figcaption>
+        <ol class="thread">
+          <li class="msg me"><p class="bubble"><span class="sr-only">You: </span>Add my free times to our plan. I'm free Friday evening to Sunday afternoon.</p></li>
+          <li class="msg ai">
+            <span class="avatar" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-spark"/></svg></span>
+            <div class="bubble">
+              <span class="sr-only">Your AI: </span><span class="tool"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-tool"/></svg>Rendezvous · read room</span>
+              <p>Here's exactly what I'll post to the room. Nothing else:</p>
+              <div class="approve">
+                <dl>
+                  <div><dt>type</dt><dd>availability</dd></div>
+                  <div><dt>window</dt><dd class="v">Fri 6:00 PM → Sun 4:00 PM</dd></div>
+                  <div><dt>shares</dt><dd>start + end only</dd></div>
+                </dl>
+                <p class="approve-foot">Waiting for your OK</p>
+              </div>
+            </div>
+          </li>
+          <li class="msg me"><p class="bubble"><span class="sr-only">You: </span>Looks right. Post it.</p></li>
+          <li class="msg sys"><p class="sys-pill"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>You approved. Only this was shared.</p></li>
+        </ol>
+      </figure>
+      <div class="needs" id="needs">
+        <p class="spec-title">What you'll need</p>
+        <dl>
+          <div><dt>App</dt><dd>An AI app that lets you add a custom connector (MCP), such as Claude, ChatGPT on the web, Claude Code or Cursor.</dd></div>
+          <div><dt>Time</dt><dd>It's easiest on a computer and takes a few minutes.</dd></div>
+          <div><dt>Plan</dt><dd>Claude's Free plan allows one custom connector; on Claude Team or Enterprise you can't add a personal one yourself.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <section class="success" id="success" aria-labelledby="success-title" hidden>
+    <div class="save-col">
       <div class="success-head" id="success-head">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <h1 id="success-title" tabindex="-1">You're in. Save your personal link.</h1>
+        <ol class="stepper" aria-label="Setup progress">
+          <li class="done"><span>Account</span><span class="sr-only"> (done)</span></li>
+          <li id="step-save" aria-current="step"><span>Save link</span><span class="sr-only"></span></li>
+          <li id="step-connect"><span>Connect AI</span><span class="sr-only"></span></li>
+        </ol>
+        <div class="head-row">
+          <span class="ok-orb" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-check"/></svg></span>
+          <div>
+            <p class="eyebrow" id="success-eyebrow">Account created</p>
+            <h1 id="success-title" tabindex="-1">You're in. <span class="h1-2" id="success-line2">Save your personal link.</span></h1>
+          </div>
+        </div>
       </div>
       <div class="returning-head" id="returning-head" hidden>
         <p class="back-row"><button type="button" class="linkbtn" id="back-to-signup">Back to sign-up</button></p>
         <h1 id="returning-title" tabindex="-1">Connect your AI</h1>
-        <p class="returning-lede" id="returning-lede">Paste the personal link you saved when you signed up, and the steps below fill in with it.</p>
+        <p class="returning-lede" id="returning-lede">Paste the personal link you saved when you signed up, and the steps on this page fill in with it.</p>
         <p class="returning-room" id="returning-room" hidden></p>
         <form id="saved-link-form" method="post" novalidate>
           <label for="saved-link">Paste your saved Rendezvous link</label>
@@ -427,18 +775,26 @@ footer p { margin: 0 0 4px; }
           <p class="actions"><button type="submit" class="btn primary" id="saved-link-fill">Fill in the steps</button></p>
         </form>
       </div>
-      <p id="joined-line" hidden></p>
+      <p class="joined" id="joined-line" hidden></p>
 
-      <div class="secret" id="secret-box">
-        <p class="secret-label" id="mcp-url-label">Your personal MCP URL</p>
-        <code class="secret-value" id="mcp-url"></code>
-        <div class="actions">
-          <button type="button" class="btn primary" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button>
+      <div class="secret glass" id="secret-box">
+        <div class="term-bar">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <p class="secret-label" id="mcp-url-label">Your personal MCP URL</p>
+          <span class="pill warn">Shown once</span>
+        </div>
+        <div class="term-body">
+          <span class="term-prompt" aria-hidden="true">&rsaquo;</span>
+          <code class="secret-value" id="mcp-url"></code>
+        </div>
+        <div class="term-foot">
+          <button type="button" class="btn primary pulse" id="copy-url" data-copy="mcp-url" data-copy-name="your MCP URL"><svg class="i ico-copy" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i ico-ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span class="label">Copy URL</span></button>
+          <span class="term-meta">Streamable HTTP · no sign-in · the key is in the URL</span>
         </div>
       </div>
 
       <div class="danger" role="note" aria-label="Keep this URL secret">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3l9.5 17h-19L12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.2" fill="currentColor"/></svg>
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg>
         <div id="danger-fresh">
           <p><strong>This URL works like a password.</strong> Anyone who has it can act as you in Rendezvous: read your rooms and post in your name.</p>
           <p>It's shown only once and can't be recovered, so save it now (a password manager is ideal). Don't paste it into group chats or shared documents.</p>
@@ -448,12 +804,13 @@ footer p { margin: 0 0 4px; }
         </div>
       </div>
       <div class="callout" id="phone-tip" hidden>
-        <p><strong>On a phone? Save the link, then finish on a computer.</strong> Most AI apps only let you add a custom connector in a web browser or their desktop app. Save the link now in your password manager or a private note to yourself (not a group chat), then on a computer open this page again and choose 'Show me how to connect my AI'.</p>
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-phone"/></svg>
+        <div><p><strong>On a phone? Save the link, then finish on a computer.</strong> Most AI apps only let you add a custom connector in a web browser or their desktop app. Save the link now in your password manager or a private note to yourself (not a group chat), then on a computer open this page again and choose 'Show me how to connect my AI'.</p></div>
       </div>
       <section class="status" id="status-check" aria-labelledby="status-title" hidden>
         <h2 id="status-title" tabindex="-1">Is your AI connected?</h2>
         <ol class="status-list" id="status-list" role="list">
-          <li class="status-row" id="status-connect"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Add your link to your AI using the steps below. This list updates by itself.</span><span class="if-done">Connected: your AI has reached Rendezvous.</span></li>
+          <li class="status-row" id="status-connect"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Add your link to your AI using the steps on this page. This list updates by itself.</span><span class="if-done">Connected: your AI has reached Rendezvous.</span></li>
           <li class="status-row" id="status-used"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Then ask your AI something, like one of the prompts below.</span><span class="if-done">Your AI has used Rendezvous.</span></li>
           <li class="status-row" id="status-posted"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Ask your AI to add your free times to the room.</span><span class="if-done">Your free times are in. Ask your AI later how the plan is going.</span></li>
         </ol>
@@ -462,107 +819,148 @@ footer p { margin: 0 0 4px; }
         <p class="status-note" id="status-note" aria-live="polite"></p>
         <p class="actions"><button type="button" class="btn small" id="status-check-now"><span class="spinner" aria-hidden="true"></span><span>Check now</span></button></p>
       </section>
+    </div>
 
-      <h2 class="sub" id="connect-title">Connect your AI</h2>
-      <div class="tablist" role="tablist" aria-labelledby="connect-title">
-        <button type="button" class="tab" role="tab" id="tab-claude" aria-controls="panel-claude" aria-selected="true">Claude</button>
-        <button type="button" class="tab" role="tab" id="tab-chatgpt" aria-controls="panel-chatgpt" aria-selected="false" tabindex="-1">ChatGPT</button>
-        <button type="button" class="tab" role="tab" id="tab-code" aria-controls="panel-code" aria-selected="false" tabindex="-1">Claude Code</button>
-        <button type="button" class="tab" role="tab" id="tab-cursor" aria-controls="panel-cursor" aria-selected="false" tabindex="-1">Cursor</button>
-        <button type="button" class="tab" role="tab" id="tab-other" aria-controls="panel-other" aria-selected="false" tabindex="-1">Other MCP clients</button>
-      </div>
+    <div class="connect-col">
+      <section class="palette glass" aria-labelledby="connect-title">
+        <div class="pal-head">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-plug"/></svg>
+          <h2 id="connect-title">Connect your AI</h2>
+          <span class="pal-hint" aria-hidden="true"><kbd>&uarr;</kbd><kbd>&darr;</kbd>&nbsp;to switch</span>
+        </div>
+        <div class="pal-body">
+          <div class="tablist" role="tablist" aria-labelledby="connect-title">
+            <button type="button" class="tab" role="tab" id="tab-claude" aria-controls="panel-claude" aria-selected="true"><span class="tab-ico" aria-hidden="true">Cl</span><span class="tab-txt"><span class="tab-name">Claude</span><span class="tab-meta" aria-hidden="true">Web · desktop app</span></span></button>
+            <button type="button" class="tab" role="tab" id="tab-chatgpt" aria-controls="panel-chatgpt" aria-selected="false" tabindex="-1"><span class="tab-ico" aria-hidden="true">GPT</span><span class="tab-txt"><span class="tab-name">ChatGPT</span><span class="tab-meta" aria-hidden="true">Web only</span></span></button>
+            <button type="button" class="tab" role="tab" id="tab-code" aria-controls="panel-code" aria-selected="false" tabindex="-1"><span class="tab-ico" aria-hidden="true">&gt;_</span><span class="tab-txt"><span class="tab-name">Claude Code</span><span class="tab-meta" aria-hidden="true">Terminal</span></span></button>
+            <button type="button" class="tab" role="tab" id="tab-cursor" aria-controls="panel-cursor" aria-selected="false" tabindex="-1"><span class="tab-ico" aria-hidden="true">Cu</span><span class="tab-txt"><span class="tab-name">Cursor</span><span class="tab-meta" aria-hidden="true">Desktop</span></span></button>
+            <button type="button" class="tab" role="tab" id="tab-other" aria-controls="panel-other" aria-selected="false" tabindex="-1"><span class="tab-ico" aria-hidden="true">{ }</span><span class="tab-txt"><span class="tab-name">Other MCP clients</span><span class="tab-meta" aria-hidden="true">Streamable HTTP</span></span></button>
+          </div>
 
-      <div class="tabpanel" role="tabpanel" id="panel-claude" aria-labelledby="tab-claude" tabindex="0">
-        <ol>
-          <li>Open <a href="https://claude.ai/customize/connectors" target="_blank" rel="noopener noreferrer">Customize &gt; Connectors<span class="sr-only"> (opens in a new tab)</span></a> in claude.ai or the Claude desktop app.</li>
-          <li>Select <span class="ui">Add</span>, then <span class="ui">Add custom connector</span>. If it asks for a connector type, choose <span class="ui">Web</span>.</li>
-          <li>Name it <span class="ui">Rendezvous</span>, paste your URL as the server URL, and click <span class="ui">Continue</span>.</li>
-          <li>If it asks how people sign in, choose <span class="ui">No sign-in</span> (no headers or OAuth needed), then click <span class="ui">Add</span>.</li>
-          <li>In a chat, click <span class="ui">+</span>, open <span class="ui">Connectors</span> and make sure Rendezvous is switched on, then just ask.</li>
+          <div class="panels">
+            <div class="tabpanel" role="tabpanel" id="panel-claude" aria-labelledby="tab-claude" tabindex="0">
+              <ol>
+                <li><div>Open <a href="https://claude.ai/customize/connectors" target="_blank" rel="noopener noreferrer">Customize &gt; Connectors<svg class="i" aria-hidden="true" focusable="false"><use href="#i-ext"/></svg><span class="sr-only"> (opens in a new tab)</span></a> in claude.ai or the Claude desktop app.</div></li>
+                <li><div>Select <span class="ui">Add</span>, then <span class="ui">Add custom connector</span>. If it asks for a connector type, choose <span class="ui">Web</span>.</div></li>
+                <li><div>Name it <span class="ui">Rendezvous</span>, paste your URL as the server URL, and click <span class="ui">Continue</span>.<p class="actions url-copy"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><svg class="i ico-copy" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i ico-ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span class="label">Copy URL</span></button></p></div></li>
+                <li><div>If it asks how people sign in, choose <span class="ui">No sign-in</span> (no headers or OAuth needed), then click <span class="ui">Add</span>.</div></li>
+                <li><div>In a chat, click <span class="ui">+</span>, open <span class="ui">Connectors</span> and make sure Rendezvous is switched on, then just ask.</div></li>
+              </ol>
+              <p class="note">The Free plan allows one custom connector. On Team or Enterprise plans only an Owner can add custom connectors, and a connector they add appears for everyone in the organization, so don't ask them to add your personal link; use a personal Claude account or Claude Code instead.</p>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-chatgpt" aria-labelledby="tab-chatgpt" tabindex="0" hidden>
+              <ol>
+                <li><div>On the web, open <a href="https://chatgpt.com/plugins" target="_blank" rel="noopener noreferrer">chatgpt.com/plugins<svg class="i" aria-hidden="true" focusable="false"><use href="#i-ext"/></svg><span class="sr-only"> (opens in a new tab)</span></a>.</div></li>
+                <li><div>Select <span class="ui">+</span>, then <span class="ui">Add custom MCP server</span>.</div></li>
+                <li><div>Name it <span class="ui">Rendezvous</span> and paste your URL under <span class="ui">Connection</span>.<p class="actions url-copy"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><svg class="i ico-copy" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i ico-ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span class="label">Copy URL</span></button></p></div></li>
+                <li><div>For authentication choose <span class="ui">No authentication</span>; the URL itself is your key.</div></li>
+                <li><div>Select <span class="ui">I understand and want to continue</span>, then <span class="ui">Create as a plugin</span>, and install it from your plugins list.</div></li>
+                <li><div>In a chat, type <kbd>@</kbd> and pick <span class="ui">Rendezvous</span>. ChatGPT asks you to confirm before it posts anything; approve only what you agreed to share.</div></li>
+              </ol>
+              <p class="note">Custom MCP servers depend on your ChatGPT plan and workspace settings, and setup works on the web, not in the phone app. If ChatGPT can read your room but can't post to it, use Claude (the Free plan allows one custom connector) or Claude Code instead.</p>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-code" aria-labelledby="tab-code" tabindex="0" hidden>
+              <p>Run this in your terminal:</p>
+              <p class="note fill-first">Paste your saved link first, and your command appears here.</p>
+              <div class="codeblock">
+                <div class="code-bar"><span class="code-lang">Terminal</span><button type="button" class="btn small" data-copy="cc-command" data-copy-name="the command"><svg class="i ico-copy" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i ico-ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span class="label">Copy command</span></button></div>
+                <pre class="shell"><code id="cc-command"></code></pre>
+              </div>
+              <p class="note">Then start Claude Code and run <code>/mcp</code> to check it's connected. It's added for your user, so it works in every project.</p>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-cursor" aria-labelledby="tab-cursor" tabindex="0" hidden>
+              <p>With Cursor installed on this computer:</p>
+              <p class="note fill-first">Paste your saved link first, and the Add to Cursor button and config appear here.</p>
+              <div class="cursor-actions">
+                <p class="actions url-copy"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><svg class="i ico-copy" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i ico-ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span class="label">Copy URL</span></button></p>
+                <p class="actions" id="cursor-install-row"><a id="cursor-install" class="btn" role="link" aria-disabled="true" aria-describedby="cursor-gate">Add to Cursor</a></p>
+              </div>
+              <p class="note" id="cursor-gate">Copy your URL first (Copy URL, above). The button works once you have, so you still have the URL if Cursor doesn't open.</p>
+              <p class="note">Cursor opens and asks you to confirm installing Rendezvous. Make sure it's switched on in Cursor's MCP settings, then ask in the chat.</p>
+              <p><span class="if-button">If the button doesn't open Cursor, add</span><span class="no-button">On your computer, add</span> this to <code>~/.cursor/mcp.json</code> (keep any servers already listed there):</p>
+              <div class="codeblock">
+                <div class="code-bar"><span class="code-lang">~/.cursor/mcp.json</span><button type="button" class="btn small" data-copy="cursor-json" data-copy-name="the config"><svg class="i ico-copy" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i ico-ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span class="label">Copy config</span></button></div>
+                <pre><code id="cursor-json"></code></pre>
+              </div>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-other" aria-labelledby="tab-other" tabindex="0" hidden>
+              <p>Any client that supports remote MCP servers over Streamable HTTP can connect. A typical config:</p>
+              <p class="note fill-first">Paste your saved link first, and your config appears here.</p>
+              <div class="codeblock">
+                <div class="code-bar"><span class="code-lang">MCP config · JSON</span><button type="button" class="btn small" data-copy="json-config" data-copy-name="the config"><svg class="i ico-copy" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i ico-ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span class="label">Copy config</span></button></div>
+                <pre><code id="json-config"></code></pre>
+              </div>
+              <p class="note">Some clients name the field differently (for example <code>serverUrl</code>) or want <code>"type": "http"</code>. No headers or OAuth are needed; the token is part of the URL.</p>
+            </div>
+          </div>
+        </div>
+        <p class="note" id="last-checked">Steps last checked November 2026. Menu names change; look for "Connectors" (Claude) or "Plugins" (ChatGPT).</p>
+      </section>
+
+      <section class="say" aria-labelledby="say-title">
+        <h2 id="say-title">What to say to your AI</h2>
+        <p class="hint" id="say-hint">Once it's connected, try something like:</p>
+        <ul class="prompts" id="prompts" aria-labelledby="say-title"></ul>
+      </section>
+
+      <p class="fineprint" id="lost-link"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-key"/></svg><span>Lost your link? It can't be recovered, because we only keep a one-way hash of it. Sign up again for a new one and ask the organizer for a fresh invite, and tell them your old account won't be posting so they don't wait for it.</span></p>
+    </div>
+  </section>
+
+  <section class="about" id="about" aria-labelledby="about-title">
+    <div class="about-grid">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2 id="about-title">What is Rendezvous?</h2>
+        <p class="about-body">A shared space where each person's own AI coordinates a group plan: a trip, a meeting, a dinner. There's no AI on our side. Your AI posts short, structured notes, and Rendezvous works out the overlap with plain, predictable code.</p>
+        <ol class="flow">
+          <li><div><b>Connect</b><span>Add your personal link to the AI you already use.</span></div></li>
+          <li><div><b>Share the essentials</b><span>Each AI posts free time windows, budget limits, must-haves, preferences, proposals and votes.</span></div></li>
+          <li><div><b>Find what works</b><span>Rendezvous computes common free windows, a budget range that works for everyone, ranked preferences and vote tallies.</span></div></li>
         </ol>
-        <p class="note">The Free plan allows one custom connector. On Team or Enterprise plans only an Owner can add custom connectors, and a connector they add appears for everyone in the organization, so don't ask them to add your personal link; use a personal Claude account or Claude Code instead.</p>
-        <p class="actions url-copy"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
       </div>
-
-      <div class="tabpanel" role="tabpanel" id="panel-chatgpt" aria-labelledby="tab-chatgpt" tabindex="0" hidden>
-        <ol>
-          <li>On the web, open <a href="https://chatgpt.com/plugins" target="_blank" rel="noopener noreferrer">chatgpt.com/plugins<span class="sr-only"> (opens in a new tab)</span></a>.</li>
-          <li>Select <span class="ui">+</span>, then <span class="ui">Add custom MCP server</span>.</li>
-          <li>Name it <span class="ui">Rendezvous</span> and paste your URL under <span class="ui">Connection</span>.</li>
-          <li>For authentication choose <span class="ui">No authentication</span>; the URL itself is your key.</li>
-          <li>Select <span class="ui">I understand and want to continue</span>, then <span class="ui">Create as a plugin</span>, and install it from your plugins list.</li>
-          <li>In a chat, type <kbd>@</kbd> and pick <span class="ui">Rendezvous</span>. ChatGPT asks you to confirm before it posts anything; approve only what you agreed to share.</li>
-        </ol>
-        <p class="note">Custom MCP servers depend on your ChatGPT plan and workspace settings, and setup works on the web, not in the phone app. If ChatGPT can read your room but can't post to it, use Claude (the Free plan allows one custom connector) or Claude Code instead.</p>
-        <p class="actions url-copy"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
-      </div>
-
-      <div class="tabpanel" role="tabpanel" id="panel-code" aria-labelledby="tab-code" tabindex="0" hidden>
-        <p>Run this in your terminal:</p>
-        <p class="note fill-first">Fill in your link above and your command appears here.</p>
-        <div class="codeblock">
-          <pre><code id="cc-command"></code></pre>
-          <div class="actions"><button type="button" class="btn small" data-copy="cc-command" data-copy-name="the command"><span class="label">Copy command</span></button></div>
+      <figure class="viz glass" id="viz">
+        <div class="viz-head"><span>solve &rarr; common free windows</span><span class="pill">Illustration</span></div>
+        <div class="viz-body" aria-hidden="true">
+          <div class="viz-labels"><span>Your AI</span><span>AI 2</span><span>AI 3</span><span>AI 4</span></div>
+          <div class="viz-tracks">
+            <span class="viz-ol"></span>
+            <span class="viz-track"><span class="viz-bar r1"></span></span>
+            <span class="viz-track"><span class="viz-bar r2"></span></span>
+            <span class="viz-track"><span class="viz-bar r3"></span></span>
+            <span class="viz-track"><span class="viz-bar r4"></span></span>
+            <span class="viz-axis"><span>Fri</span><span>Sat</span><span>Sun</span></span>
+          </div>
         </div>
-        <p class="note">Then start Claude Code and run <code>/mcp</code> to check it's connected. It's added for your user, so it works in every project.</p>
-      </div>
+        <div class="viz-result" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-check"/></svg><span>1 window works</span><span>4 of 4 people</span></div>
+        <figcaption>Each AI posts only free start and end times, never what the busy time is. Rendezvous lines them up and finds the overlap.</figcaption>
+      </figure>
+    </div>
+  </section>
 
-      <div class="tabpanel" role="tabpanel" id="panel-cursor" aria-labelledby="tab-cursor" tabindex="0" hidden>
-        <p>With Cursor installed on this computer:</p>
-        <p class="note fill-first">Fill in your link above and the Add to Cursor button and config appear here.</p>
-        <p class="actions" id="cursor-install-row"><a id="cursor-install" class="btn" role="link" aria-disabled="true" aria-describedby="cursor-gate">Add to Cursor</a></p>
-        <p class="note" id="cursor-gate">Copy your URL first (Copy URL, above). The button works once you have, so you still have the URL if Cursor doesn't open.</p>
-        <p class="note">Cursor opens and asks you to confirm installing Rendezvous. Make sure it's switched on in Cursor's MCP settings, then ask in the chat.</p>
-        <p>If the button doesn't open Cursor, add this to <code>~/.cursor/mcp.json</code> (keep any servers already listed there):</p>
-        <div class="codeblock">
-          <pre><code id="cursor-json"></code></pre>
-          <div class="actions"><button type="button" class="btn small" data-copy="cursor-json" data-copy-name="the config"><span class="label">Copy config</span></button></div>
-        </div>
-      </div>
+  <section class="privacy" aria-labelledby="privacy-title">
+    <p class="eyebrow">Trust</p>
+    <h2 id="privacy-title">Privacy, by design</h2>
+    <ul class="bento" aria-labelledby="privacy-title">
+      <li class="feat edge"><span class="ico" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-shield-ok"/></svg></span><b>You approve what's shared</b><span>Your AI is told to post only what you've agreed to share with the group, and only the minimum.</span></li>
+      <li><span class="ico" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-cal"/></svg></span><b>Free windows, not your calendar</b><span>Availability is just start and end times. Never what the busy time is, where, or with whom.</span></li>
+      <li><span class="ico" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-braces"/></svg></span><b>Other people's posts are data</b><span>Your AI is told to treat what others post as information, never as instructions to follow.</span></li>
+      <li><span class="ico" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-server"/></svg></span><b>No AI on our servers</b><span>Nothing you share is fed to a model on our side. The matching is ordinary code.</span></li>
+      <li><span class="ico" aria-hidden="true"><svg class="i" focusable="false"><use href="#i-key"/></svg></span><b>Your link stays yours</b><span>It's shown once, on this page, and we store only a one-way hash. This page sets no cookies and saves nothing in your browser.</span></li>
+    </ul>
+  </section>
+</main>
 
-      <div class="tabpanel" role="tabpanel" id="panel-other" aria-labelledby="tab-other" tabindex="0" hidden>
-        <p>Any client that supports remote MCP servers over Streamable HTTP can connect. A typical config:</p>
-        <p class="note fill-first">Fill in your link above and your config appears here.</p>
-        <div class="codeblock">
-          <pre><code id="json-config"></code></pre>
-          <div class="actions"><button type="button" class="btn small" data-copy="json-config" data-copy-name="the config"><span class="label">Copy config</span></button></div>
-        </div>
-        <p class="note">Some clients name the field differently (for example <code>serverUrl</code>) or want <code>"type": "http"</code>. No headers or OAuth are needed; the token is part of the URL.</p>
-      </div>
-
-      <p class="note" id="last-checked">Steps last checked November 2026. Menu names change; look for "Connectors" (Claude) or "Plugins" (ChatGPT).</p>
-
-      <h2 class="sub" id="say-title">What to say to your AI</h2>
-      <p class="hint" id="say-hint">Once it's connected, try something like:</p>
-      <ul class="prompts" id="prompts" aria-labelledby="say-title"></ul>
-
-      <p class="fineprint" id="lost-link">Lost your link? It can't be recovered, because we only keep a one-way hash of it. Sign up again for a new one and ask the organizer for a fresh invite, and tell them your old account won't be posting so they don't wait for it.</p>
-    </section>
-
-    <section class="about" aria-labelledby="about-title">
-      <h2 id="about-title">What is Rendezvous?</h2>
-      <p>A shared space where each person's own AI coordinates a group plan: a trip, a meeting, a dinner. There's no AI on our side. Your AI posts short, structured notes, and Rendezvous works out the overlap with plain, predictable code.</p>
-      <ol class="steps">
-        <li><div><b>Connect</b><span>Add your personal link to the AI you already use.</span></div></li>
-        <li><div><b>Share the essentials</b><span>Each AI posts free time windows, budget limits, must-haves, preferences, proposals and votes.</span></div></li>
-        <li><div><b>Find what works</b><span>Rendezvous computes common free windows, a budget range that works for everyone, ranked preferences and vote tallies.</span></div></li>
-      </ol>
-
-      <h2 id="privacy-title">Privacy, by design</h2>
-      <ul class="privacy" aria-labelledby="privacy-title">
-        <li><b>You approve what's shared</b><span>Your AI is told to post only what you've agreed to share with the group, and only the minimum.</span></li>
-        <li><b>Free windows, not your calendar</b><span>Availability is just start and end times. Never what the busy time is, where, or with whom.</span></li>
-        <li><b>Other people's posts are data</b><span>Your AI is told to treat what others post as information, never as instructions to follow.</span></li>
-        <li><b>No AI on our servers</b><span>Nothing you share is fed to a model on our side. The matching is ordinary code.</span></li>
-        <li><b>Your link stays yours</b><span>It's shown once, on this page, and we store only a one-way hash. This page sets no cookies and saves nothing in your browser.</span></li>
-      </ul>
-    </section>
-  </main>
-
-  <footer>
+<footer>
+  <div class="wrap">
     <p>Rendezvous is an early preview. Rooms are for coordinating plans; please don't post sensitive personal information.</p>
-  </footer>
-</div>
+    <p class="foot-tag">No cookies · no trackers · no AI on our side</p>
+  </div>
+</footer>
 
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="live-polite"></div>
 <div class="sr-only" role="alert" aria-live="assertive" aria-atomic="true" id="live-assertive"></div>
@@ -682,8 +1080,10 @@ footer p { margin: 0 0 4px; }
   const promptList = $("prompts");
   const livePolite = $("live-polite");
   const liveAssertive = $("live-assertive");
+  const hero = $("hero");
 
-  const DEFAULT_HEADLINE = headline.textContent || "";
+  /** The sign-up view's headline as the markup has it (with its gradient span); put back by cloning, never as markup. */
+  const DEFAULT_HEADLINE = /** @type {HTMLElement} */ (headline.cloneNode(true));
   const DEFAULT_LEDE = lede.textContent || "";
   const DEFAULT_KICKER = kickerText.textContent || "";
   const DEFAULT_TITLE = document.title;
@@ -1108,7 +1508,7 @@ footer p { margin: 0 0 4px; }
     kindBadge.hidden = true;
     kindBadge.textContent = "";
     kickerText.textContent = DEFAULT_KICKER;
-    headline.textContent = DEFAULT_HEADLINE;
+    headline.replaceChildren(...Array.from(DEFAULT_HEADLINE.childNodes, (n) => n.cloneNode(true)));
     lede.textContent = DEFAULT_LEDE;
     placeConnectEntry(state === "loading" ? "none" : "plain");
     handoff.hidden = true;
@@ -1147,7 +1547,7 @@ footer p { margin: 0 0 4px; }
       // The server answers 404 alike for unknown, expired and used-up codes and for closed or expired rooms.
       calloutTitle.textContent = "This invite link doesn't work.";
       calloutBody.textContent = "It may be incomplete, expired or used up, or the room may have closed. You can still " +
-        "create an account below. Then ask whoever invited you for a fresh link, or give the new invite code to your " +
+        "create an account here. Then ask whoever invited you for a fresh link, or give the new invite code to your " +
         "AI and it can join the room for you.";
       announce("This invite link doesn't work. You can still create an account.");
     } else if (state === "error") {
@@ -1420,7 +1820,10 @@ footer p { margin: 0 0 4px; }
     ];
   }
 
-  /** Fills "What to say to your AI", each prompt with its own Copy button. @param {string[]} prompts */
+  /**
+   * Fills "What to say to your AI", each prompt with its own Copy button. Each button is described by its prompt, so
+   * the Copy buttons don't all read alike. @param {string[]} prompts
+   */
   function renderPrompts(prompts) {
     promptList.replaceChildren();
     prompts.forEach((text, i) => {
@@ -1431,16 +1834,22 @@ footer p { margin: 0 0 4px; }
       p.textContent = text;
       const row = document.createElement("div");
       row.className = "actions";
+      const tag = document.createElement("span");
+      tag.className = "prompt-tag";
+      tag.setAttribute("aria-hidden", "true");
+      tag.textContent = "Paste into your AI";
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "btn small";
       btn.dataset.copy = p.id;
       btn.dataset.copyName = "the prompt";
+      btn.setAttribute("aria-describedby", p.id);
+      btn.append(copyIcon("ico-copy"), copyIcon("ico-ok"));
       const label = document.createElement("span");
       label.className = "label";
       label.textContent = "Copy";
       btn.appendChild(label);
-      row.appendChild(btn);
+      row.append(tag, btn);
       li.append(p, row);
       promptList.appendChild(li);
     });
@@ -1505,6 +1914,7 @@ footer p { margin: 0 0 4px; }
     connectTitle.textContent = returning ? "Add your link to your AI" : DEFAULT_CONNECT_TITLE;
     intro.hidden = true;
     signupCard.hidden = true;
+    hero.hidden = true;
     returningEntry.hidden = true;
     success.hidden = false;
     scrollTo(0, 0);
@@ -1526,15 +1936,17 @@ footer p { margin: 0 0 4px; }
 
     done = true;
     mcpUrlEl.textContent = mcpUrl;
+    revealUrl(mcpUrl);
     phoneTip.hidden = !coarsePointer();
     fillConnectSteps(mcpUrl);
     if (opts.roomTitle) {
-      joinedLine.textContent = "You've joined “" + opts.roomTitle + "”. Connect your AI below and it can pick up from there.";
+      joinedLine.textContent = "You've joined “" + opts.roomTitle + "”. Connect your AI and it can pick up from there.";
       joinedLine.hidden = false;
     }
     renderPrompts(examplePrompts(opts.roomTitle));
     const statusPath = mcpPathOf(mcpUrl, API_BASE);
     if (statusPath) setupStatusCheck(statusPath.slice("/mcp/".length), { roomId: opts.roomId });
+    syncSteps(); // a fresh card starts unsaved, whatever the returning view left
 
     document.title = "Your Rendezvous link";
     successTitle.focus();
@@ -1563,7 +1975,7 @@ footer p { margin: 0 0 4px; }
     }
     setFieldError(savedLink, savedLinkError, "");
     if (value === mcpUrlEl.textContent) {
-      announce("The steps below already use this link."); // and a running check keeps going
+      announce("The steps already use this link."); // and a running check keeps going
       return;
     }
     mcpUrlEl.textContent = value; // not on show (no secret box here): the panels' Copy URL buttons copy it
@@ -1572,7 +1984,7 @@ footer p { margin: 0 0 4px; }
     success.classList.remove("awaiting-link");
     setupStatusCheck(path.slice("/mcp/".length), { roomId: null });
     statusWaitForClick();
-    announce("Done. The steps below now use your link.");
+    announce("Done. The steps now use your link.");
   }
 
   /**
@@ -1600,6 +2012,7 @@ footer p { margin: 0 0 4px; }
   document.addEventListener("copy", () => {
     const url = mcpUrlEl.textContent || "";
     if (done && url && String(getSelection() || "").includes(url)) markUrlSaved();
+    syncSteps();
   });
 
   // The returning view: in from the sign-up view only, out with Back.
@@ -1626,6 +2039,7 @@ footer p { margin: 0 0 4px; }
     success.hidden = true;
     intro.hidden = false;
     signupCard.hidden = false;
+    hero.hidden = false;
     placeConnectEntry(entryWhere);
     document.title = beforeReturning.title;
     scrollTo(0, beforeReturning.y);
@@ -2160,6 +2574,8 @@ footer p { margin: 0 0 4px; }
     st.gen++;
     statusStop("");
     st.token = "";
+    st.done = { connect: false, used: false, posted: false };
+    for (const key of STATUS_KEYS) statusRows[key].classList.remove("done");
     statusStartBtn.hidden = true;
     statusSection.hidden = true;
   }
@@ -2358,6 +2774,7 @@ footer p { margin: 0 0 4px; }
       announce("Couldn't copy automatically. The text is selected; press Control C, or Command C on a Mac.", true);
     }
     if (URL_SOURCES.includes(target.dataset.copy || "")) statusAutoStart();
+    syncSteps();
   });
 
   // ---------- phone handoff (before signup) ----------
@@ -2422,6 +2839,133 @@ footer p { margin: 0 0 4px; }
       }
     });
   });
+
+  // ---------- presentation: the URL reveal, the progress row, tab orientation, one-shot reveals ----------
+  // None of this sends, stores or decides anything. Every animation is finite, and none runs with reduced motion.
+
+  const stepSave = $("step-save");
+  const stepConnect = $("step-connect");
+  const copyUrlBtn = $("copy-url");
+  const statusConnectRow = $("status-connect");
+  const successEyebrow = $("success-eyebrow");
+  const successLine2 = $("success-line2");
+
+  /** True when the visitor asked for less motion. */
+  function reducedMotion() {
+    return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  /**
+   * One of the Copy URL button's icons, cloned for a button the script builds ("ico-copy", or "ico-ok" for Copied).
+   * @param {string} which
+   * @returns {Node}
+   */
+  function copyIcon(which) {
+    const icon = document.querySelector("#copy-url ." + which);
+    return icon ? icon.cloneNode(true) : document.createTextNode("");
+  }
+
+  /**
+   * The once-shown URL arrives like model output: the base is dimmed and the token streams in. Decoration only. The
+   * element's text stays exactly the URL (a <wbr> after each "/" of the base adds no text), so copying and selecting
+   * work at once, and afterwards the token is one text node again, which a screen reader reads as one string. The
+   * delays use the Web Animations API, so no style attribute is ever written.
+   * @param {string} url
+   */
+  function revealUrl(url) {
+    const cut = url.lastIndexOf("/mcp/");
+    if (cut < 0) return;
+    const head = url.slice(0, cut + 5);
+    const token = url.slice(cut + 5);
+    const base = document.createElement("span");
+    base.className = "url-base";
+    let from = 0;
+    for (let i = 0; i < head.length; i++) {
+      if (head[i] === "/" && head[i - 1] !== "/" && head[i + 1] !== "/") {
+        base.append(head.slice(from, i + 1), document.createElement("wbr"));
+        from = i + 1;
+      }
+    }
+    if (from < head.length) base.append(head.slice(from));
+    const tokenEl = document.createElement("span");
+    tokenEl.className = "url-token";
+    mcpUrlEl.replaceChildren(base, tokenEl);
+    if (reducedMotion() || typeof tokenEl.animate !== "function") {
+      tokenEl.textContent = token;
+      return;
+    }
+    const LEAD_MS = 240, STEP_MS = 16, CHAR_MS = 420;
+    Array.from(token).forEach((c, i) => {
+      const ch = document.createElement("span");
+      ch.textContent = c;
+      tokenEl.appendChild(ch);
+      ch.animate([{ opacity: 0, filter: "blur(4px)" }, { opacity: 1, filter: "blur(0)" }], {
+        duration: CHAR_MS, delay: LEAD_MS + i * STEP_MS, easing: "cubic-bezier(.2, .7, .2, 1)", fill: "backwards",
+      });
+    });
+    const end = LEAD_MS + token.length * STEP_MS + CHAR_MS;
+    setTimeout(() => {
+      tokenEl.textContent = token;
+      mcpUrlEl.classList.add("landed"); // the caret, after the last character
+    }, end);
+    setTimeout(() => mcpUrlEl.classList.remove("landed"), end + 1500);
+  }
+
+  /**
+   * The progress row on the fresh connect card: "Save link" is done once the URL is saved, "Connect AI" once the
+   * checklist's first row is. Copy URL is the primary, pulsing button until the URL is saved, and the heading says so
+   * once the AI has connected. It reads urlCopied and that row's class and changes nothing else, so it can run any time.
+   */
+  function syncSteps() {
+    const connected = statusConnectRow.classList.contains("done");
+    const saved = urlCopied || connected;
+    markStep(stepSave, saved, !saved);
+    markStep(stepConnect, connected, saved && !connected);
+    copyUrlBtn.classList.toggle("pulse", !saved);
+    copyUrlBtn.classList.toggle("primary", !saved);
+    successEyebrow.textContent = connected ? "AI connected" : "Account created";
+    successLine2.textContent = connected ? "Your AI is connected." : "Save your personal link.";
+  }
+
+  /** @param {HTMLElement} li @param {boolean} isDone @param {boolean} current */
+  function markStep(li, isDone, current) {
+    li.classList.toggle("done", isDone);
+    if (current) li.setAttribute("aria-current", "step");
+    else li.removeAttribute("aria-current");
+    const sr = li.querySelector(".sr-only");
+    if (sr) sr.textContent = isDone ? " (done)" : "";
+  }
+
+  if (typeof MutationObserver === "function") {
+    new MutationObserver(syncSteps).observe(statusConnectRow, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  // The tabs stack in a column on wide screens and sit in a grid on narrow ones; either way the arrow keys move.
+  const tablist = document.querySelector('[role="tablist"]');
+  const tabsInColumn = typeof matchMedia === "function" ? matchMedia("(min-width: 760px)") : null;
+  function syncTabOrientation() {
+    if (tablist) tablist.setAttribute("aria-orientation", tabsInColumn && tabsInColumn.matches ? "vertical" : "horizontal");
+  }
+  syncTabOrientation();
+  if (tabsInColumn) tabsInColumn.addEventListener("change", syncTabOrientation);
+
+  // The example chat and the overlap illustration play once, the first time they come into view: as soon as any of
+  // one reaches the top 85% of the viewport. A share of the whole figure (threshold 0.3) is never reached when the
+  // figure is over three times the viewport's height (500% zoom), and its messages stayed invisible.
+  if (!reducedMotion() && typeof IntersectionObserver === "function") {
+    const reveal = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.replace("pre", "in");
+        reveal.unobserve(entry.target);
+      }
+    }, { threshold: 0, rootMargin: "0px 0px -15% 0px" });
+    for (const id of ["chat", "viz"]) {
+      const node = $(id);
+      node.classList.add("pre");
+      reveal.observe(node);
+    }
+  }
 
   // ---------- start ----------
 
