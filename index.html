@@ -20,7 +20,7 @@
   fetches PROD_API_BASE, script-src admits nothing but the hashed script, and a loopback origin can only reach the
   visitor's own machine, so it is no channel to send anything off it.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DOg7fgmVoXykeve06sI4GlsQ7kXn5XIrmoKgnYP2PCY='; style-src 'sha256-+1enPj10YY0zwseZgS5KPDNTOp+urCu/EISivqUfCes='; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-9YraOvnH3kUVoTqAmhoAIEuNvjHSh+r/BuqiR9YL23Q='; style-src 'sha256-aLFUemPW0kzbuOTH4SPqw+PtnwzJ0WhEhcfj6yd/LoM='; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
@@ -138,7 +138,7 @@ h1 .room { color: var(--accent-ink); }
 }
 .needs strong { font-weight: 650; }
 .existing { margin: 12px 0 0; max-width: 36rem; font-size: 0.95rem; color: var(--muted); }
-.existing code { color: var(--text); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
+.existing .btn { display: flex; width: fit-content; margin-top: 8px; }
 .chip.dev { color: var(--warn-text); background: var(--warn-bg); border-color: var(--warn-border); }
 
 /* callouts */
@@ -225,6 +225,51 @@ a.btn[aria-disabled="true"]:hover { background: var(--surface); }
 .danger svg { width: 22px; height: 22px; flex: none; margin-top: 2px; }
 .danger p { margin: 0; }
 .danger p + p { margin-top: 6px; }
+
+/* Returning visitors ("Show me how to connect my AI"): a link-styled entry under the sign-up card, then the connect
+   card without the once-shown URL. */
+.linkbtn {
+  display: inline; min-height: 24px; margin: 0; padding: 2px 0; border: 0; background: none; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px;
+}
+.linkbtn:hover { text-decoration-thickness: 2px; }
+.returning-entry { margin: -12px 0 28px; padding: 0 2px; color: var(--muted); }
+.back-row { margin: 0 0 10px; font-size: 0.95rem; }
+.returning-head h1 { margin: 0 0 6px; outline: none; font-size: clamp(1.5rem, 5vw, 1.9rem); }
+.returning-lede { margin: 0 0 6px; color: var(--muted); }
+.returning-room { margin: 0; font-size: 0.95rem; }
+.returning-head form { margin: 18px 0 0; }
+.returning-head form .actions { margin: 12px 0 0; }
+#saved-link { font-family: var(--mono); font-size: 0.92rem; }
+.fill-first { display: none; }
+#success.awaiting-link .fill-first { display: block; }
+#success.awaiting-link .codeblock,
+#success.awaiting-link .url-copy,
+#success.awaiting-link #cursor-install-row,
+#success.awaiting-link #cursor-gate { display: none; }
+
+/* "Is your AI connected?" checklist. A row's state is its text and the .done class; the icon (an empty ring, then a
+   filled ring with a tick) and the colour only repeat it. */
+.status { margin: 18px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
+.card .status h2 { font-size: 1.05rem; margin: 0 0 10px; outline: none; }
+.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.status-row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
+.status-icon { display: block; width: 22px; height: 22px; margin-top: 1px; }
+.status-icon circle { fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-dasharray: 3.2 2.6; }
+.status-icon path { display: none; fill: none; stroke: var(--surface); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.status-row.done .status-icon circle { fill: var(--ok-text); stroke: var(--ok-text); stroke-dasharray: none; }
+.status-row.done .status-icon path { display: inline; }
+.status-row .if-done { display: none; }
+.status-row.done .if-pending { display: none; }
+.status-row.done .if-done { display: inline; font-weight: 600; color: var(--ok-text); }
+.status-privacy { margin: 12px 0 0; font-size: 0.88rem; color: var(--muted); }
+.status-note { margin: 8px 0 0; font-size: 0.92rem; font-weight: 550; }
+.status-note:empty { margin: 0; }
+.status .actions { margin: 10px 0 0; }
+.status #status-check-start { margin: 10px 0 0; }
+/* At the page's request cap: inactive, not busy. */
+#status-check-now[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
+#status-check-now[aria-disabled="true"]:hover { background: var(--surface); }
 
 /* tabs */
 .tablist { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px; background: var(--surface-2); border-radius: 12px; border: 1px solid var(--border); }
@@ -326,10 +371,10 @@ footer p { margin: 0 0 4px; }
       <p class="lede" id="lede">Rendezvous is a shared room where everyone's AI (Claude, ChatGPT or another) works out a group trip or meeting. Sign up to get your personal link, then connect it to the AI you already use.</p>
       <p class="needs" id="needs"><strong>What you'll need:</strong> an AI app that lets you add a custom connector (MCP), such as Claude, ChatGPT on the web, Claude Code or Cursor. It's easiest on a computer and takes a few minutes. Claude's Free plan allows one custom connector; on Claude Team or Enterprise you can't add a personal one yourself.</p>
       <div class="callout" id="handoff" hidden>
-        <p><strong>On a phone?</strong> Setup is easiest on a computer. Send this invite to yourself and open it there.</p>
+        <p><strong>On a phone?</strong> Your private link is shown only once, and you'll paste it into your AI on a computer. Easiest: send this invite to yourself and sign up there.</p>
         <p class="actions"><button type="button" class="btn small" id="handoff-btn"><span class="label" id="handoff-label">Send this invite to myself</span></button></p>
       </div>
-      <p class="existing" id="existing-user" hidden>Already use Rendezvous? You don't need a second account: ask your AI to join the room with invite code <code id="existing-code"></code>.</p>
+      <p class="existing" id="existing-user" hidden>Already signed up, maybe on your phone? Don't create a second account: it would leave an extra you in the room who never posts.</p>
       <div class="callout" id="invite-callout" hidden>
         <p><strong id="callout-title"></strong><span id="callout-body"></span></p>
         <p class="actions" id="callout-actions" hidden><button type="button" class="btn small" id="retry-invite">Try again</button></p>
@@ -362,15 +407,29 @@ footer p { margin: 0 0 4px; }
         <p class="fineprint">No cookies, no trackers. This page doesn't save anything in your browser.</p>
       </form>
     </section>
+    <p class="returning-entry" id="returning-entry" hidden>Already have your link? <button type="button" class="linkbtn" id="existing-connect-btn">Show me how to connect my AI</button></p>
 
     <section class="card" id="success" aria-labelledby="success-title" hidden>
-      <div class="success-head">
+      <div class="success-head" id="success-head">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <h1 id="success-title" tabindex="-1">You're in. Save your personal link.</h1>
       </div>
+      <div class="returning-head" id="returning-head" hidden>
+        <p class="back-row"><button type="button" class="linkbtn" id="back-to-signup">Back to sign-up</button></p>
+        <h1 id="returning-title" tabindex="-1">Connect your AI</h1>
+        <p class="returning-lede" id="returning-lede">Paste the personal link you saved when you signed up, and the steps below fill in with it.</p>
+        <p class="returning-room" id="returning-room" hidden></p>
+        <form id="saved-link-form" method="post" novalidate>
+          <label for="saved-link">Paste your saved Rendezvous link</label>
+          <p class="hint" id="saved-link-hint">It stays on this page: filling in the steps doesn't send your link anywhere.</p>
+          <input id="saved-link" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="saved-link-hint saved-link-error">
+          <p class="field-error" id="saved-link-error" hidden></p>
+          <p class="actions"><button type="submit" class="btn primary" id="saved-link-fill">Fill in the steps</button></p>
+        </form>
+      </div>
       <p id="joined-line" hidden></p>
 
-      <div class="secret">
+      <div class="secret" id="secret-box">
         <p class="secret-label" id="mcp-url-label">Your personal MCP URL</p>
         <code class="secret-value" id="mcp-url"></code>
         <div class="actions">
@@ -380,14 +439,29 @@ footer p { margin: 0 0 4px; }
 
       <div class="danger" role="note" aria-label="Keep this URL secret">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3l9.5 17h-19L12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.2" fill="currentColor"/></svg>
-        <div>
+        <div id="danger-fresh">
           <p><strong>This URL works like a password.</strong> Anyone who has it can act as you in Rendezvous: read your rooms and post in your name.</p>
           <p>It's shown only once and can't be recovered, so save it now (a password manager is ideal). Don't paste it into group chats or shared documents.</p>
         </div>
+        <div id="danger-returning" hidden>
+          <p><strong>Your link works like a password.</strong> Don't paste it into group chats.</p>
+        </div>
       </div>
       <div class="callout" id="phone-tip" hidden>
-        <p><strong>On a phone? Save the link, then finish on a computer.</strong> Most AI apps only let you add a custom connector in a web browser or their desktop app. Save the link now in your password manager or a private note to yourself (not a group chat), then add it from a computer using the steps below.</p>
+        <p><strong>On a phone? Save the link, then finish on a computer.</strong> Most AI apps only let you add a custom connector in a web browser or their desktop app. Save the link now in your password manager or a private note to yourself (not a group chat), then on a computer open this page again and choose 'Show me how to connect my AI'.</p>
       </div>
+      <section class="status" id="status-check" aria-labelledby="status-title" hidden>
+        <h2 id="status-title" tabindex="-1">Is your AI connected?</h2>
+        <ol class="status-list" id="status-list" role="list">
+          <li class="status-row" id="status-connect"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Add your link to your AI using the steps below. This list updates by itself.</span><span class="if-done">Connected: your AI has reached Rendezvous.</span></li>
+          <li class="status-row" id="status-used"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Then ask your AI something, like one of the prompts below.</span><span class="if-done">Your AI has used Rendezvous.</span></li>
+          <li class="status-row" id="status-posted"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Ask your AI to add your free times to the room.</span><span class="if-done">Your free times are in. Ask your AI later how the plan is going.</span></li>
+        </ol>
+        <p class="status-privacy" id="status-privacy">Checking sends your link only to Rendezvous, to see whether your AI has connected. Nothing is stored.</p>
+        <button type="button" class="btn small" id="status-check-start" hidden>Check my connection</button>
+        <p class="status-note" id="status-note" aria-live="polite"></p>
+        <p class="actions"><button type="button" class="btn small" id="status-check-now"><span class="spinner" aria-hidden="true"></span><span>Check now</span></button></p>
+      </section>
 
       <h2 class="sub" id="connect-title">Connect your AI</h2>
       <div class="tablist" role="tablist" aria-labelledby="connect-title">
@@ -407,7 +481,7 @@ footer p { margin: 0 0 4px; }
           <li>In a chat, click <span class="ui">+</span>, open <span class="ui">Connectors</span> and make sure Rendezvous is switched on, then just ask.</li>
         </ol>
         <p class="note">The Free plan allows one custom connector. On Team or Enterprise plans only an Owner can add custom connectors, and a connector they add appears for everyone in the organization, so don't ask them to add your personal link; use a personal Claude account or Claude Code instead.</p>
-        <p class="actions"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
+        <p class="actions url-copy"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
       </div>
 
       <div class="tabpanel" role="tabpanel" id="panel-chatgpt" aria-labelledby="tab-chatgpt" tabindex="0" hidden>
@@ -420,11 +494,12 @@ footer p { margin: 0 0 4px; }
           <li>In a chat, type <kbd>@</kbd> and pick <span class="ui">Rendezvous</span>. ChatGPT asks you to confirm before it posts anything; approve only what you agreed to share.</li>
         </ol>
         <p class="note">Custom MCP servers depend on your ChatGPT plan and workspace settings, and setup works on the web, not in the phone app. If ChatGPT can read your room but can't post to it, use Claude (the Free plan allows one custom connector) or Claude Code instead.</p>
-        <p class="actions"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
+        <p class="actions url-copy"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
       </div>
 
       <div class="tabpanel" role="tabpanel" id="panel-code" aria-labelledby="tab-code" tabindex="0" hidden>
         <p>Run this in your terminal:</p>
+        <p class="note fill-first">Fill in your link above and your command appears here.</p>
         <div class="codeblock">
           <pre><code id="cc-command"></code></pre>
           <div class="actions"><button type="button" class="btn small" data-copy="cc-command" data-copy-name="the command"><span class="label">Copy command</span></button></div>
@@ -434,6 +509,7 @@ footer p { margin: 0 0 4px; }
 
       <div class="tabpanel" role="tabpanel" id="panel-cursor" aria-labelledby="tab-cursor" tabindex="0" hidden>
         <p>With Cursor installed on this computer:</p>
+        <p class="note fill-first">Fill in your link above and the Add to Cursor button and config appear here.</p>
         <p class="actions" id="cursor-install-row"><a id="cursor-install" class="btn" role="link" aria-disabled="true" aria-describedby="cursor-gate">Add to Cursor</a></p>
         <p class="note" id="cursor-gate">Copy your URL first (Copy URL, above). The button works once you have, so you still have the URL if Cursor doesn't open.</p>
         <p class="note">Cursor opens and asks you to confirm installing Rendezvous. Make sure it's switched on in Cursor's MCP settings, then ask in the chat.</p>
@@ -446,6 +522,7 @@ footer p { margin: 0 0 4px; }
 
       <div class="tabpanel" role="tabpanel" id="panel-other" aria-labelledby="tab-other" tabindex="0" hidden>
         <p>Any client that supports remote MCP servers over Streamable HTTP can connect. A typical config:</p>
+        <p class="note fill-first">Fill in your link above and your config appears here.</p>
         <div class="codeblock">
           <pre><code id="json-config"></code></pre>
           <div class="actions"><button type="button" class="btn small" data-copy="json-config" data-copy-name="the config"><span class="label">Copy config</span></button></div>
@@ -459,7 +536,7 @@ footer p { margin: 0 0 4px; }
       <p class="hint" id="say-hint">Once it's connected, try something like:</p>
       <ul class="prompts" id="prompts" aria-labelledby="say-title"></ul>
 
-      <p class="fineprint">Lost your link? It can't be recovered, because we only keep a one-way hash of it. Sign up again for a new one and ask for a fresh invite to rejoin your rooms.</p>
+      <p class="fineprint" id="lost-link">Lost your link? It can't be recovered, because we only keep a one-way hash of it. Sign up again for a new one and ask the organizer for a fresh invite, and tell them your old account won't be posting so they don't wait for it.</p>
     </section>
 
     <section class="about" aria-labelledby="about-title">
@@ -559,7 +636,8 @@ footer p { margin: 0 0 4px; }
   const headline = $("headline");
   const lede = $("lede");
   const existingUser = $("existing-user");
-  const existingCode = $("existing-code");
+  const returningEntry = $("returning-entry");
+  const existingConnectBtn = $("existing-connect-btn");
   const handoff = $("handoff");
   const handoffBtn = $("handoff-btn");
   const handoffLabel = $("handoff-label");
@@ -579,10 +657,22 @@ footer p { margin: 0 0 4px; }
   const submitBtn = /** @type {HTMLButtonElement} */ ($("submit-btn"));
   const submitLabel = $("submit-label");
   const success = $("success");
+  const successHead = $("success-head");
   const successTitle = $("success-title");
+  const returningHead = $("returning-head");
+  const returningTitle = $("returning-title");
+  const returningRoom = $("returning-room");
+  const backBtn = $("back-to-signup");
+  const savedLinkForm = $("saved-link-form");
+  const savedLink = /** @type {HTMLInputElement} */ ($("saved-link"));
+  const savedLinkError = $("saved-link-error");
   const joinedLine = $("joined-line");
+  const secretBox = $("secret-box");
   const mcpUrlEl = $("mcp-url");
+  const dangerFresh = $("danger-fresh");
+  const dangerReturning = $("danger-returning");
   const phoneTip = $("phone-tip");
+  const connectTitle = $("connect-title");
   const ccCommand = $("cc-command");
   const cursorInstall = $("cursor-install");
   const cursorInstallRow = $("cursor-install-row");
@@ -597,6 +687,7 @@ footer p { margin: 0 0 4px; }
   const DEFAULT_LEDE = lede.textContent || "";
   const DEFAULT_KICKER = kickerText.textContent || "";
   const DEFAULT_TITLE = document.title;
+  const DEFAULT_CONNECT_TITLE = connectTitle.textContent || "";
 
   /** Invite code sent with signup; null means plain signup without joining a room. */
   let inviteCode = /** @type {string | null} */ (null);
@@ -608,6 +699,12 @@ footer p { margin: 0 0 4px; }
   let urlCopied = false;
   /** The "Add to Cursor" deep link. It goes on the button only once urlCopied is true (see markUrlSaved). */
   let cursorHref = "";
+  /** The connect card on show: "fresh" after a sign-up here, "returning" from "Show me how to connect my AI". */
+  let connectMode = /** @type {"fresh" | "returning" | null} */ (null);
+  /** Where the returning-view entry belongs on the sign-up view (see placeConnectEntry); Back puts it there again. */
+  let entryWhere = /** @type {"invite" | "plain" | "none"} */ ("none");
+  /** What Back restores: the sign-up view's title and scroll position. */
+  let beforeReturning = { title: DEFAULT_TITLE, y: 0 };
 
   // ---------- small helpers ----------
 
@@ -667,7 +764,7 @@ footer p { margin: 0 0 4px; }
   /**
    * One-click install links. Each one is a custom-scheme deep link that hands the URL straight to the app on this
    * computer. Never an https redirector on a vendor's website: the link carries the token, so that would hand it to a
-   * third party. Pure (tests/web_test.ts). btoa throws on non-Latin-1 text; showSuccess handles that.
+   * third party. Pure (tests/web_test.ts). btoa throws on non-Latin-1 text; fillConnectSteps handles that.
    * @param {string} mcpUrl
    * @returns {{ cursor: string }}
    */
@@ -986,6 +1083,21 @@ footer p { margin: 0 0 4px; }
   // ---------- invite state ----------
 
   /**
+   * Where "Show me how to connect my AI" is offered: as a button in #existing-user on a valid invite ("invite"), as a
+   * link under the sign-up card otherwise ("plain"), and nowhere while an invite is being checked ("none"). One button,
+   * moved between the two. While a connect card is up, the place is only remembered (Back shows it).
+   * @param {"invite" | "plain" | "none"} where
+   */
+  function placeConnectEntry(where) {
+    entryWhere = where;
+    const invite = where === "invite";
+    (invite ? existingUser : returningEntry).append(existingConnectBtn);
+    existingConnectBtn.className = invite ? "btn small" : "linkbtn";
+    existingUser.hidden = !invite;
+    returningEntry.hidden = where !== "plain" || connectMode !== null;
+  }
+
+  /**
    * @param {"none" | "loading" | "valid" | "invalid" | "error"} state
    * @param {{ kind?: string | null }} [opts]
    */
@@ -998,8 +1110,7 @@ footer p { margin: 0 0 4px; }
     kickerText.textContent = DEFAULT_KICKER;
     headline.textContent = DEFAULT_HEADLINE;
     lede.textContent = DEFAULT_LEDE;
-    existingUser.hidden = true;
-    existingCode.textContent = "";
+    placeConnectEntry(state === "loading" ? "none" : "plain");
     handoff.hidden = true;
     callout.hidden = true;
     callout.className = "callout";
@@ -1023,11 +1134,9 @@ footer p { margin: 0 0 4px; }
       headline.appendChild(room);
       lede.textContent = "Create your account to join the room. Your AI can then add your availability and preferences, " +
         "sharing only what you approve, and work out a plan with everyone else's AI.";
-      if (inviteCode) {
-        // People who already have a link would otherwise end up with a second account that their AI isn't using.
-        existingCode.textContent = inviteCode;
-        existingUser.hidden = false;
-      }
+      // Someone who already has a link (often made on a phone) gets the connect steps here instead of a second account,
+      // which would sit in the room and never post.
+      if (inviteCode) placeConnectEntry("invite");
       // Most AI apps can't add a custom connector on a phone: suggest moving to a computer before signing up there.
       handoff.hidden = !coarsePointer();
       document.title = clip("Join “" + inviteRoomTitle + "”", 70) + " · Rendezvous";
@@ -1210,7 +1319,7 @@ footer p { margin: 0 0 4px; }
 
       if (status === 200 && data && typeof data.mcp_url === "string" && /^https?:\/\/\S+$/.test(data.mcp_url) && data.mcp_url.length < 2048) {
         const joined = code && typeof data.room_title === "string" ? clip(data.room_title, 120) : null;
-        showSuccess(data.mcp_url, joined);
+        renderConnect(data.mcp_url, { mode: "fresh", roomTitle: joined, roomId: typeof data.room_id === "string" ? data.room_id : null });
         if (QUICK_AVAILABILITY && joined !== null) showQuickLane(data.mcp_url, data.room_id);
         return;
       }
@@ -1272,7 +1381,7 @@ footer p { margin: 0 0 4px; }
     void submit(inviteCode);
   });
 
-  // ---------- success ----------
+  // ---------- connect card: after sign-up ("fresh") or with a saved link ("returning") ----------
 
   /**
    * Copy-paste prompts. They never contain the room title: the user pastes them into their AI as their own words,
@@ -1292,33 +1401,29 @@ footer p { margin: 0 0 4px; }
     ];
   }
 
-  /** @param {string} mcpUrl @param {string | null} roomTitle */
-  function showSuccess(mcpUrl, roomTitle) {
-    done = true;
-    mcpUrlEl.textContent = mcpUrl;
-    phoneTip.hidden = !coarsePointer();
-    ccCommand.textContent = claudeCodeCommand(mcpUrl);
-    jsonConfig.textContent = JSON.stringify({ mcpServers: { rendezvous: { url: mcpUrl } } }, null, 2);
-    cursorJson.textContent = jsonConfig.textContent; // Cursor's mcp.json has the same shape
-    // Cursor has no phone app, and on a phone any installed app can register the cursor:// scheme and would be handed
-    // this secret URL, so the one-click link only exists on devices with a fine pointer (desktops, laptops).
-    try {
-      cursorHref = coarsePointer() ? "" : installLinks(mcpUrl).cursor;
-    } catch {
-      cursorHref = "";
-    }
-    if (!cursorHref) {
-      cursorInstallRow.hidden = true; // the JSON config below still works
-      cursorGate.hidden = true;
-    }
+  /**
+   * Prompts for the returning view. With an invite code the page accepted (INVITE_RE: a server-generated code, never
+   * text a person wrote), the first one hands the AI this page's invite link, and the second is the invitee prompts'
+   * second. Without one, the direct-signup prompts. The room title is never in them. room_join takes the whole link and,
+   * for someone already in the room, answers already_member (0.4.0 adds a next_step pointing to room_read).
+   * Pure (tests/web_test.ts).
+   * @param {string | null} code
+   * @param {string} pageBase location.origin + location.pathname: this page's address without its query
+   * @returns {string[]}
+   */
+  function returningPrompts(code, pageBase) {
+    if (!code || !INVITE_RE.test(code)) return examplePrompts(null);
+    const [, afterOthers] = examplePrompts(code);
+    return [
+      "Join my Rendezvous room with this link: " + pageBase + "?invite=" + code + ". Then read the room, ask me when I'm free for the dates it's planning, and show me exactly what you'll post before you post it.",
+      afterOthers,
+    ];
+  }
 
-    if (roomTitle) {
-      joinedLine.textContent = "You've joined “" + roomTitle + "”. Connect your AI below and it can pick up from there.";
-      joinedLine.hidden = false;
-    }
-
+  /** Fills "What to say to your AI", each prompt with its own Copy button. @param {string[]} prompts */
+  function renderPrompts(prompts) {
     promptList.replaceChildren();
-    examplePrompts(roomTitle).forEach((text, i) => {
+    prompts.forEach((text, i) => {
       const li = document.createElement("li");
       li.className = "prompt";
       const p = document.createElement("p");
@@ -1339,12 +1444,99 @@ footer p { margin: 0 0 4px; }
       li.append(p, row);
       promptList.appendChild(li);
     });
+  }
 
+  /**
+   * Puts the URL into the Claude Code command, both JSON configs and (fine pointer only) the "Add to Cursor" link,
+   * which goes live only through markUrlSaved. Used by both views.
+   * @param {string} mcpUrl
+   */
+  function fillConnectSteps(mcpUrl) {
+    ccCommand.textContent = claudeCodeCommand(mcpUrl);
+    jsonConfig.textContent = JSON.stringify({ mcpServers: { rendezvous: { url: mcpUrl } } }, null, 2);
+    cursorJson.textContent = jsonConfig.textContent; // Cursor's mcp.json has the same shape
+    // Cursor has no phone app, and on a phone any installed app can register the cursor:// scheme and would be handed
+    // this secret URL, so the one-click link only exists on devices with a fine pointer (desktops, laptops).
+    try {
+      cursorHref = coarsePointer() ? "" : installLinks(mcpUrl).cursor;
+    } catch {
+      cursorHref = "";
+    }
+    if (!cursorHref) {
+      cursorInstallRow.hidden = true; // the JSON config below still works
+      cursorGate.hidden = true;
+    }
+  }
+
+  /**
+   * Empty steps, and "Add to Cursor" back to the disabled link the markup starts with, so neither view inherits the
+   * other's link: a pasted link counts as saved, a new one only once it's copied.
+   */
+  function resetConnectSteps() {
+    urlCopied = false;
+    cursorHref = "";
+    for (const node of [mcpUrlEl, ccCommand, jsonConfig, cursorJson]) node.textContent = "";
+    cursorInstall.removeAttribute("href");
+    cursorInstall.setAttribute("role", "link");
+    cursorInstall.setAttribute("aria-disabled", "true");
+    cursorInstall.setAttribute("aria-describedby", "cursor-gate");
+    cursorInstallRow.hidden = false;
+    cursorGate.hidden = false;
+  }
+
+  /**
+   * The connect card. "fresh": right after a sign-up here, with the once-shown URL, its warnings, the checklist and the
+   * beforeunload guard. "returning": for someone who already has a link (mcpUrl is null). There is no URL to show or
+   * lose; they paste their saved link and fillFromSavedLink puts it into the steps without sending it anywhere.
+   * @param {string | null} mcpUrl
+   * @param {{ mode: "fresh" | "returning", roomTitle: string | null, roomId: string | null }} opts
+   */
+  function renderConnect(mcpUrl, opts) {
+    const returning = opts.mode === "returning";
+    if (returning) beforeReturning = { title: document.title, y: scrollY };
+    connectMode = opts.mode;
+    resetConnectSteps();
+    for (const node of [successHead, secretBox, dangerFresh]) node.hidden = returning;
+    for (const node of [returningHead, dangerReturning]) node.hidden = !returning;
+    joinedLine.hidden = true;
+    phoneTip.hidden = true;
+    success.classList.toggle("awaiting-link", returning);
+    success.setAttribute("aria-labelledby", returning ? "returning-title" : "success-title");
+    connectTitle.textContent = returning ? "Add your link to your AI" : DEFAULT_CONNECT_TITLE;
     intro.hidden = true;
     signupCard.hidden = true;
+    returningEntry.hidden = true;
     success.hidden = false;
-    document.title = "Your Rendezvous link";
     scrollTo(0, 0);
+
+    if (returning) {
+      savedLink.value = "";
+      setFieldError(savedLink, savedLinkError, "");
+      returningRoom.textContent = opts.roomTitle
+        ? "For “" + opts.roomTitle + "”: once your AI is connected, the first prompt below has it join the room for you."
+        : "";
+      returningRoom.hidden = !opts.roomTitle;
+      renderPrompts(returningPrompts(inviteCode, location.origin + location.pathname));
+      document.title = "Connect your AI · Rendezvous";
+      returningTitle.focus();
+      announce("Paste your saved link to fill in the steps for your AI.");
+      return;
+    }
+    if (!mcpUrl) return; // a fresh card always has the URL from /api/signup
+
+    done = true;
+    mcpUrlEl.textContent = mcpUrl;
+    phoneTip.hidden = !coarsePointer();
+    fillConnectSteps(mcpUrl);
+    if (opts.roomTitle) {
+      joinedLine.textContent = "You've joined “" + opts.roomTitle + "”. Connect your AI below and it can pick up from there.";
+      joinedLine.hidden = false;
+    }
+    renderPrompts(examplePrompts(opts.roomTitle));
+    const statusPath = mcpPathOf(mcpUrl, API_BASE);
+    if (statusPath) setupStatusCheck(statusPath.slice("/mcp/".length), { roomId: opts.roomId });
+
+    document.title = "Your Rendezvous link";
     successTitle.focus();
     announce("Account created. Your personal MCP URL is shown once. Save it now.");
     addEventListener("beforeunload", (e) => {
@@ -1352,6 +1544,35 @@ footer p { margin: 0 0 4px; }
       e.preventDefault();
       e.returnValue = "";
     });
+  }
+
+  /**
+   * "Fill in the steps" in the returning view. The pasted link must pass mcpPathOf (this page's API base + /mcp/ + a
+   * token-shaped segment), the one check the page has. Then it goes into the steps and counts as saved, since it was
+   * pasted from where it is kept, so "Add to Cursor" is live at once on a fine pointer. It sends nothing and stores
+   * nothing: the checklist is set up, then waits for "Check my connection".
+   */
+  function fillFromSavedLink() {
+    const value = savedLink.value.trim();
+    const path = mcpPathOf(value, API_BASE);
+    if (!path) {
+      setFieldError(savedLink, savedLinkError, "That doesn't look like a Rendezvous link from this site. It starts with " + API_BASE + "/mcp/.");
+      savedLink.focus();
+      announce(savedLinkError.textContent || "", true);
+      return;
+    }
+    setFieldError(savedLink, savedLinkError, "");
+    if (value === mcpUrlEl.textContent) {
+      announce("The steps below already use this link."); // and a running check keeps going
+      return;
+    }
+    mcpUrlEl.textContent = value; // not on show (no secret box here): the panels' Copy URL buttons copy it
+    fillConnectSteps(value);
+    markUrlSaved();
+    success.classList.remove("awaiting-link");
+    setupStatusCheck(path.slice("/mcp/".length), { roomId: null });
+    statusWaitForClick();
+    announce("Done. The steps below now use your link.");
   }
 
   /**
@@ -1379,6 +1600,36 @@ footer p { margin: 0 0 4px; }
   document.addEventListener("copy", () => {
     const url = mcpUrlEl.textContent || "";
     if (done && url && String(getSelection() || "").includes(url)) markUrlSaved();
+  });
+
+  // The returning view: in from the sign-up view only, out with Back.
+  existingConnectBtn.addEventListener("click", () => {
+    if (busy || done || connectMode) return;
+    renderConnect(null, { mode: "returning", roomTitle: inviteRoomTitle, roomId: null });
+  });
+
+  savedLinkForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    fillFromSavedLink();
+  });
+  savedLink.addEventListener("input", () => {
+    if (savedLink.getAttribute("aria-invalid") === "true") setFieldError(savedLink, savedLinkError, "");
+  });
+
+  backBtn.addEventListener("click", () => {
+    if (connectMode !== "returning") return;
+    statusTeardown();
+    resetConnectSteps();
+    savedLink.value = "";
+    setFieldError(savedLink, savedLinkError, "");
+    connectMode = null;
+    success.hidden = true;
+    intro.hidden = false;
+    signupCard.hidden = false;
+    placeConnectEntry(entryWhere);
+    document.title = beforeReturning.title;
+    scrollTo(0, beforeReturning.y);
+    existingConnectBtn.focus();
   });
 
   // ---------- "No AI app yet?" lane (runs only when QUICK_AVAILABILITY is true) ----------
@@ -1743,6 +1994,296 @@ footer p { margin: 0 0 4px; }
     addRow();
   }
 
+  // ---------- "Is your AI connected?" checklist (POST /api/status) ----------
+  // On the success card: has the person's AI reached Rendezvous yet? The page asks <API_BASE>/api/status with the
+  // token in the request body, never in a URL (Supabase's request logs keep full URLs), as text/plain so the browser
+  // sends it without a CORS preflight. One request at a time, only while a polling window is open and the page is
+  // visible, and at most STATUS_MAX_POSTS per page load. A server without the endpoint (0.3.0) answers 404, and the
+  // checklist then hides for good. The token stays in memory: nothing is written to browser storage, cookies or the
+  // address bar. setupStatusCheck and startStatusCheck are the entry points. The returning view (a pasted link) adds
+  // statusWaitForClick, so nothing is sent before "Check my connection", and statusTeardown for its Back button.
+
+  const STATUS_TIMEOUT_MS = 8000;
+  // Every 5 s for the first 5 minutes of a window, then every 15 s; every 30 s after 3 failures in a row.
+  const STATUS_FAST_MS = 5000;
+  const STATUS_FAST_FOR_MS = 5 * 60 * 1000;
+  const STATUS_SLOW_MS = 15000;
+  const STATUS_BACKOFF_MS = 30000;
+  const STATUS_BACKOFF_AFTER = 3;
+  const STATUS_WINDOW_MS = 20 * 60 * 1000;
+  const STATUS_MAX_POSTS = 150;
+  const STATUS_KEYS = ["connect", "used", "posted"];
+
+  const statusSection = $("status-check");
+  const statusTitle = $("status-title");
+  const statusList = $("status-list");
+  const statusNote = $("status-note");
+  const statusBtn = $("status-check-now");
+  const statusStartBtn = $("status-check-start");
+  /** @type {Record<string, HTMLElement>} */
+  const statusRows = { connect: $("status-connect"), used: $("status-used"), posted: $("status-posted") };
+
+  /** The checklist's state. The token lives here, in memory, and nowhere else. */
+  const st = {
+    token: "",
+    roomId: /** @type {string | null} */ (null),
+    /** Bumped by setupStatusCheck, so a late answer about an earlier token is dropped. */
+    gen: 0,
+    /** The server has no status endpoint (404): hidden for the rest of the page's life. */
+    gone: false,
+    /** A polling window is open, since `start`. */
+    open: false,
+    start: 0,
+    timer: /** @type {number | undefined} */ (undefined),
+    inFlight: false,
+    lastAt: -Infinity,
+    posts: 0,
+    failures: 0,
+    autoStarted: false,
+    /** The link was pasted (the returning view): checks wait for "Check my connection". */
+    pasted: false,
+    done: /** @type {Record<string, boolean>} */ ({ connect: false, used: false, posted: false }),
+  };
+
+  /**
+   * The body of one check: the token, plus the room only when the sign-up joined one. Pure (tests/web_test.ts).
+   * @param {string} token
+   * @param {string | null} roomId
+   */
+  function statusBody(token, roomId) {
+    return JSON.stringify(roomId ? { token, room_id: roomId } : { token });
+  }
+
+  /**
+   * Milliseconds from the start of one check to the next. Pure (tests/web_test.ts).
+   * @param {number} elapsedMs since the window started
+   * @param {number} failures checks in a row that failed
+   */
+  function statusDelay(elapsedMs, failures) {
+    if (failures >= STATUS_BACKOFF_AFTER) return STATUS_BACKOFF_MS;
+    return elapsedMs < STATUS_FAST_FOR_MS ? STATUS_FAST_MS : STATUS_SLOW_MS;
+  }
+
+  /**
+   * What one answer means. "gone": no such endpoint (a 0.3.0 server answers 404). "refused": the token isn't accepted
+   * (400, 401). "retry": anything else that isn't a well-formed 200. Pure (tests/web_test.ts).
+   * @param {number} status
+   * @param {any} data
+   * @returns {{ kind: "ok", connect: boolean, used: boolean, posted: boolean } | { kind: "gone" | "refused" | "retry" }}
+   */
+  function readStatus(status, data) {
+    if (status === 404) return { kind: "gone" };
+    if (status === 400 || status === 401) return { kind: "refused" };
+    const d = data && typeof data === "object" ? data : {};
+    if (status !== 200 || typeof d.ai_connected !== "boolean" || typeof d.tool_called !== "boolean") return { kind: "retry" };
+    return { kind: "ok", connect: d.ai_connected, used: d.tool_called, posted: d.availability_posted === true };
+  }
+
+  /** Sets the note only when it changes, so the live region doesn't repeat itself. @param {string} text */
+  function setStatusNote(text) {
+    if (statusNote.textContent !== text) statusNote.textContent = text;
+  }
+
+  /** Every row on show is done. */
+  function statusComplete() {
+    return st.done.connect && st.done.used && (st.roomId === null || st.done.posted);
+  }
+
+  /** Closes the polling window: no automatic checks until startStatusCheck. @param {string} note */
+  function statusStop(note) {
+    st.open = false;
+    clearTimeout(st.timer);
+    setStatusNote(note);
+    statusBtn.setAttribute("aria-busy", "false");
+    if (st.posts >= STATUS_MAX_POSTS) statusBtn.setAttribute("aria-disabled", "true");
+  }
+
+  /**
+   * Shows the checklist, every row pending, for this token (the last segment of the person's MCP URL). The room's row
+   * is there only when the sign-up joined a room (a room id). Sends nothing: startStatusCheck does.
+   * @param {string} token
+   * @param {{ roomId?: string | null }} [opts]
+   */
+  function setupStatusCheck(token, opts) {
+    if (st.gone || !/^[A-Za-z0-9_-]{20,200}$/.test(token)) return;
+    const roomId = opts && typeof opts.roomId === "string" && UUID_RE.test(opts.roomId) ? opts.roomId : null;
+    st.gen++;
+    statusStop("");
+    st.token = token;
+    st.roomId = roomId;
+    st.failures = 0;
+    st.autoStarted = false;
+    st.pasted = false;
+    st.done = { connect: false, used: false, posted: false };
+    for (const key of STATUS_KEYS) statusRows[key].classList.remove("done");
+    if (roomId) statusList.append(statusRows.posted);
+    else statusRows.posted.remove();
+    statusBtn.hidden = false;
+    statusStartBtn.hidden = true;
+    statusSection.hidden = false;
+  }
+
+  /**
+   * Starts, or restarts, a 20-minute polling window, with a check at once (at most one per 5 s). Returns whether a
+   * window is open: not once the checklist is complete, gone, or at the page's request cap.
+   */
+  function startStatusCheck() {
+    if (!st.token || st.gone || statusComplete() || st.posts >= STATUS_MAX_POSTS) return false;
+    st.open = true;
+    st.start = Date.now();
+    setStatusNote("");
+    statusSoon();
+    return true;
+  }
+
+  /** The first copy of the URL, the command or a config starts the checks; later copies leave them alone. */
+  function statusAutoStart() {
+    if (st.autoStarted || !st.token) return;
+    st.autoStarted = true;
+    startStatusCheck();
+  }
+
+  /**
+   * A pasted link (the returning view): nothing is sent until the person asks. "Check my connection" stands in for
+   * Check now, and a copy of the command or a config doesn't start the checks. Sends nothing.
+   */
+  function statusWaitForClick() {
+    if (!st.token || st.gone) return;
+    st.autoStarted = true;
+    st.pasted = true;
+    statusBtn.hidden = true;
+    statusStartBtn.hidden = false;
+  }
+
+  /** Back from the returning view: no more checks about that link, and the checklist hides until it is set up again. */
+  function statusTeardown() {
+    st.gen++;
+    statusStop("");
+    st.token = "";
+    statusStartBtn.hidden = true;
+    statusSection.hidden = true;
+  }
+
+  /** The next check as soon as allowed: at once, or 5 s after the last one began. An open request schedules its own. */
+  function statusSoon() {
+    clearTimeout(st.timer);
+    if (!st.inFlight) st.timer = setTimeout(statusTick, Math.max(0, st.lastAt + STATUS_FAST_MS - Date.now()));
+  }
+
+  /** After an answer: the next check, or the end of the window once its 20 minutes or the page's requests are used up. */
+  function statusNext() {
+    if (!st.open) return;
+    const elapsed = Date.now() - st.start;
+    if (elapsed >= STATUS_WINDOW_MS || st.posts >= STATUS_MAX_POSTS) {
+      statusStop("Stopped checking automatically.");
+      return;
+    }
+    const wait = Math.max(0, st.lastAt + statusDelay(elapsed, st.failures) - Date.now());
+    st.timer = setTimeout(statusTick, Math.min(wait, STATUS_WINDOW_MS - elapsed));
+  }
+
+  async function statusTick() {
+    clearTimeout(st.timer);
+    if (!st.open || st.inFlight || st.gone) return;
+    if (Date.now() - st.start >= STATUS_WINDOW_MS || st.posts >= STATUS_MAX_POSTS) {
+      statusStop("Stopped checking automatically.");
+      return;
+    }
+    // Nothing is sent while the page is hidden; the visibilitychange handler picks the schedule up again.
+    if (document.visibilityState === "hidden") return;
+    const gen = st.gen;
+    st.inFlight = true;
+    st.posts++;
+    st.lastAt = Date.now();
+    /** @type {ReturnType<typeof readStatus>} */
+    let result;
+    try {
+      const { status, data } = await api("/api/status", {
+        method: "POST",
+        headers: { "content-type": "text/plain;charset=UTF-8" },
+        body: statusBody(st.token, st.roomId),
+      }, STATUS_TIMEOUT_MS);
+      result = readStatus(status, data);
+    } catch {
+      result = { kind: "retry" }; // no answer: a network error, or none within STATUS_TIMEOUT_MS
+    } finally {
+      st.inFlight = false;
+    }
+    if (gen !== st.gen) {
+      // Set up again for another token meanwhile: this answer isn't about it.
+      if (st.open) statusSoon();
+      return;
+    }
+    statusBtn.setAttribute("aria-busy", "false");
+    statusSettle(result);
+  }
+
+  /** @param {ReturnType<typeof readStatus>} result */
+  function statusSettle(result) {
+    if (result.kind === "gone") {
+      // This server has no status endpoint (0.3.0): the checklist goes, without a word.
+      st.gone = true;
+      statusStop("");
+      const hadFocus = statusSection.contains(document.activeElement);
+      statusSection.hidden = true;
+      if (hadFocus) {
+        const tab = /** @type {HTMLElement | null} */ (document.querySelector('[role="tab"][aria-selected="true"]'));
+        if (tab) tab.focus();
+      }
+      return;
+    }
+    if (result.kind === "refused") {
+      st.failures = 0;
+      statusStop(st.pasted ? "This link isn't recognised. Check that you pasted all of it." : "This link isn't recognised. Copy it again from above.");
+      return;
+    }
+    if (result.kind === "retry") {
+      st.failures++;
+      setStatusNote("Couldn't check just now; trying again.");
+      statusNext();
+      return;
+    }
+    st.failures = 0;
+    setStatusNote("");
+    // Rows only move from pending to done, and each is announced once, when it gets there.
+    /** @type {string[]} */
+    const newly = [];
+    for (const key of STATUS_KEYS) {
+      if (!(/** @type {Record<string, unknown>} */ (result))[key] || st.done[key] || (key === "posted" && !st.roomId)) continue;
+      st.done[key] = true;
+      statusRows[key].classList.add("done");
+      const text = statusRows[key].querySelector(".if-done");
+      if (text && text.textContent) newly.push(text.textContent);
+    }
+    if (newly.length) announce(newly.join(" "));
+    if (!statusComplete()) {
+      statusNext();
+      return;
+    }
+    // Every row on show is done: nothing is left to check.
+    const hadFocus = document.activeElement === statusBtn;
+    statusStop("");
+    statusBtn.hidden = true;
+    if (hadFocus) statusTitle.focus();
+  }
+
+  statusBtn.addEventListener("click", () => {
+    if (statusBtn.getAttribute("aria-disabled") === "true") return;
+    if (startStatusCheck()) statusBtn.setAttribute("aria-busy", "true");
+  });
+
+  // The first check for a pasted link; from then on Check now takes its place, and its focus.
+  statusStartBtn.addEventListener("click", () => {
+    statusStartBtn.hidden = true;
+    statusBtn.hidden = false;
+    statusBtn.focus();
+    if (startStatusCheck()) statusBtn.setAttribute("aria-busy", "true");
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "hidden" && st.open && !st.gone) statusSoon();
+  });
+
   // ---------- copy buttons ----------
 
   /** @param {string} text @returns {Promise<boolean>} */
@@ -1816,6 +2357,7 @@ footer p { margin: 0 0 4px; }
       selectContents(source);
       announce("Couldn't copy automatically. The text is selected; press Control C, or Command C on a Mac.", true);
     }
+    if (URL_SOURCES.includes(target.dataset.copy || "")) statusAutoStart();
   });
 
   // ---------- phone handoff (before signup) ----------
