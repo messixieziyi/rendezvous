@@ -20,13 +20,18 @@
   fetches PROD_API_BASE, script-src admits nothing but the hashed script, and a loopback origin can only reach the
   visitor's own machine, so it is no channel to send anything off it.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3CnZEFWhdPwvRflg3ilb+NEU8l6TBlPR1R6DHfsV3zs='; style-src 'sha256-PkWtR4TpSirJCvOZOFH2wFTBlzJUnBpMddnJXPhTidc='; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DOg7fgmVoXykeve06sI4GlsQ7kXn5XIrmoKgnYP2PCY='; style-src 'sha256-+1enPj10YY0zwseZgS5KPDNTOp+urCu/EISivqUfCes='; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121416" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Rendezvous is a shared room where everyone's own AI coordinates a group plan. Get your personal link and connect it to Claude, ChatGPT or another MCP client.">
+<!-- Link previews (chat apps unfurl invite links). Static on purpose: never a room title, which is text someone else chose. -->
+<meta property="og:title" content="Join a group plan on Rendezvous">
+<meta property="og:description" content="Rendezvous is a shared room where everyone's own AI coordinates a group plan. Get your personal link and connect it to Claude, ChatGPT or another MCP client.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
 <title>Rendezvous · Join</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f6f68'/%3E%3Ccircle cx='12.5' cy='16' r='6' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3Ccircle cx='19.5' cy='16' r='6' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3C/svg%3E">
 <style>
@@ -127,6 +132,11 @@ h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(1.9rem, 6.2vw
 h1 .room { color: var(--accent-ink); }
 .lede { color: var(--muted); font-size: 1.075rem; margin: 0; max-width: 36rem; }
 .intro[aria-busy="true"] h1 { opacity: 0.7; }
+.needs {
+  margin: 16px 0 0; max-width: 36rem; padding: 10px 14px; font-size: 0.95rem; line-height: 1.55;
+  background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px;
+}
+.needs strong { font-weight: 650; }
 .existing { margin: 12px 0 0; max-width: 36rem; font-size: 0.95rem; color: var(--muted); }
 .existing code { color: var(--text); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
 .chip.dev { color: var(--warn-text); background: var(--warn-bg); border-color: var(--warn-border); }
@@ -154,7 +164,7 @@ h1 .room { color: var(--accent-ink); }
 label { display: block; font-weight: 600; margin: 0 0 2px; }
 .optional { font-weight: 400; color: var(--muted); }
 .hint { margin: 0 0 8px; font-size: 0.92rem; color: var(--muted); }
-input[type="text"], input[type="email"] {
+input[type="text"], input[type="email"], input[type="datetime-local"], input[type="number"], select {
   display: block; width: 100%; min-height: 46px; padding: 10px 12px; font: inherit; font-size: 1rem;
   color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 10px;
   transition: border-color 120ms ease;
@@ -171,7 +181,7 @@ input[aria-invalid="true"] { border-color: var(--error-text); }
 
 /* buttons */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; text-decoration: none;
   font: inherit; font-weight: 600; font-size: 0.98rem; line-height: 1.2; border-radius: 10px; cursor: pointer;
   border: 1px solid var(--border-strong); background: var(--surface); color: var(--text);
   transition: background-color 120ms ease, border-color 120ms ease, transform 60ms ease;
@@ -184,6 +194,9 @@ input[aria-invalid="true"] { border-color: var(--error-text); }
 .btn.small { min-height: 36px; padding: 6px 12px; font-size: 0.88rem; }
 .btn.block { width: 100%; }
 .btn[disabled], .btn[aria-disabled="true"] { cursor: progress; opacity: 0.75; }
+/* "Add to Cursor" before the URL is copied: inactive, not busy. */
+a.btn[aria-disabled="true"] { cursor: default; opacity: 0.55; }
+a.btn[aria-disabled="true"]:hover { background: var(--surface); }
 .btn .spinner { display: none; width: 1em; height: 1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
 .btn[aria-busy="true"] .spinner { display: inline-block; }
 /* :hover too: .btn.primary:hover (0,3,0) would otherwise repaint the background behind the green "Copied" label while
@@ -225,7 +238,9 @@ input[aria-invalid="true"] { border-color: var(--error-text); }
 .tabpanel ol { margin: 0; padding-left: 1.3rem; }
 .tabpanel li { margin: 0 0 8px; }
 .tabpanel li::marker { color: var(--muted); font-weight: 600; }
-.tabpanel .note { font-size: 0.9rem; color: var(--muted); margin: 12px 0 0; }
+.tabpanel .note, .card > .note { font-size: 0.9rem; color: var(--muted); margin: 12px 0 0; }
+.tabpanel p.actions { margin: 12px 0 0; }
+.tabpanel kbd { padding: 0 5px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface); }
 .ui { font-weight: 600; }
 
 .codeblock { position: relative; margin: 8px 0 0; }
@@ -240,6 +255,33 @@ input[aria-invalid="true"] { border-color: var(--error-text); }
 .prompt { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: var(--surface-2); }
 .prompt p { margin: 0 0 8px; font-family: var(--serif); font-size: 1.06rem; line-height: 1.45; }
 .prompt .actions { display: flex; justify-content: flex-end; }
+
+/* "No AI app yet?" lane: the script builds it only when QUICK_AVAILABILITY is true */
+.quick { margin: 28px 0 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
+.quick > summary { cursor: pointer; padding: 12px 14px; min-height: 44px; font-weight: 600; border-radius: 12px; }
+.quick[open] > summary { border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
+.quick-body { padding: 14px 12px 4px; }
+.quick-body p { margin: 0 0 10px; }
+.quick .field-error { margin: 6px 0 0; }
+.quick .callout { margin: 0 0 12px; }
+.quick .callout p { margin: 0; }
+.quick .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.quick fieldset { min-width: 0; margin: 0 0 12px; padding: 8px 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.quick legend { padding: 0 4px; font-weight: 600; }
+.quick .pair, .quick .money-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.quick input, .quick select { min-width: 0; }
+.quick .slot-actions { margin: 8px 0 0; }
+.quick pre {
+  margin: 0 0 10px; padding: 12px 14px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+  white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.88rem; line-height: 1.55;
+}
+.quick ul { margin: 0 0 10px; padding-left: 1.2rem; }
+.quick-done strong { color: var(--ok-text); }
+@media (min-width: 560px) {
+  .quick-body { padding: 16px 16px 4px; }
+  .quick .pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quick .money-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 
 /* about */
 .about { padding: 8px 0 8px; }
@@ -282,6 +324,11 @@ footer p { margin: 0 0 4px; }
       <p class="kicker" id="kicker"><span class="badge" id="kind-badge" hidden></span><span id="kicker-text">Group plans, made by your AIs</span></p>
       <h1 id="headline">Plan together, each with your own AI.</h1>
       <p class="lede" id="lede">Rendezvous is a shared room where everyone's AI (Claude, ChatGPT or another) works out a group trip or meeting. Sign up to get your personal link, then connect it to the AI you already use.</p>
+      <p class="needs" id="needs"><strong>What you'll need:</strong> an AI app that lets you add a custom connector (MCP), such as Claude, ChatGPT on the web, Claude Code or Cursor. It's easiest on a computer and takes a few minutes. Claude's Free plan allows one custom connector; on Claude Team or Enterprise you can't add a personal one yourself.</p>
+      <div class="callout" id="handoff" hidden>
+        <p><strong>On a phone?</strong> Setup is easiest on a computer. Send this invite to yourself and open it there.</p>
+        <p class="actions"><button type="button" class="btn small" id="handoff-btn"><span class="label" id="handoff-label">Send this invite to myself</span></button></p>
+      </div>
       <p class="existing" id="existing-user" hidden>Already use Rendezvous? You don't need a second account: ask your AI to join the room with invite code <code id="existing-code"></code>.</p>
       <div class="callout" id="invite-callout" hidden>
         <p><strong id="callout-title"></strong><span id="callout-body"></span></p>
@@ -338,34 +385,41 @@ footer p { margin: 0 0 4px; }
           <p>It's shown only once and can't be recovered, so save it now (a password manager is ideal). Don't paste it into group chats or shared documents.</p>
         </div>
       </div>
+      <div class="callout" id="phone-tip" hidden>
+        <p><strong>On a phone? Save the link, then finish on a computer.</strong> Most AI apps only let you add a custom connector in a web browser or their desktop app. Save the link now in your password manager or a private note to yourself (not a group chat), then add it from a computer using the steps below.</p>
+      </div>
 
       <h2 class="sub" id="connect-title">Connect your AI</h2>
       <div class="tablist" role="tablist" aria-labelledby="connect-title">
         <button type="button" class="tab" role="tab" id="tab-claude" aria-controls="panel-claude" aria-selected="true">Claude</button>
         <button type="button" class="tab" role="tab" id="tab-chatgpt" aria-controls="panel-chatgpt" aria-selected="false" tabindex="-1">ChatGPT</button>
         <button type="button" class="tab" role="tab" id="tab-code" aria-controls="panel-code" aria-selected="false" tabindex="-1">Claude Code</button>
+        <button type="button" class="tab" role="tab" id="tab-cursor" aria-controls="panel-cursor" aria-selected="false" tabindex="-1">Cursor</button>
         <button type="button" class="tab" role="tab" id="tab-other" aria-controls="panel-other" aria-selected="false" tabindex="-1">Other MCP clients</button>
       </div>
 
       <div class="tabpanel" role="tabpanel" id="panel-claude" aria-labelledby="tab-claude" tabindex="0">
         <ol>
-          <li>In claude.ai or the Claude desktop app, open <span class="ui">Settings</span> and find <span class="ui">Connectors</span>.</li>
-          <li>Choose <span class="ui">Add custom connector</span>.</li>
-          <li>Name it <span class="ui">Rendezvous</span> and paste your URL as the server URL. Leave any OAuth or advanced fields empty.</li>
-          <li>In a chat, make sure Rendezvous is switched on in the tools or connectors menu, then just ask.</li>
+          <li>Open <a href="https://claude.ai/customize/connectors" target="_blank" rel="noopener noreferrer">Customize &gt; Connectors<span class="sr-only"> (opens in a new tab)</span></a> in claude.ai or the Claude desktop app.</li>
+          <li>Select <span class="ui">Add</span>, then <span class="ui">Add custom connector</span>. If it asks for a connector type, choose <span class="ui">Web</span>.</li>
+          <li>Name it <span class="ui">Rendezvous</span>, paste your URL as the server URL, and click <span class="ui">Continue</span>.</li>
+          <li>If it asks how people sign in, choose <span class="ui">No sign-in</span> (no headers or OAuth needed), then click <span class="ui">Add</span>.</li>
+          <li>In a chat, click <span class="ui">+</span>, open <span class="ui">Connectors</span> and make sure Rendezvous is switched on, then just ask.</li>
         </ol>
-        <p class="note">Custom connectors depend on your plan. On Team or Enterprise plans an owner may need to allow them. Menu names change from time to time; look for "Connectors".</p>
+        <p class="note">The Free plan allows one custom connector. On Team or Enterprise plans only an Owner can add custom connectors, and a connector they add appears for everyone in the organization, so don't ask them to add your personal link; use a personal Claude account or Claude Code instead.</p>
         <p class="actions"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
       </div>
 
       <div class="tabpanel" role="tabpanel" id="panel-chatgpt" aria-labelledby="tab-chatgpt" tabindex="0" hidden>
         <ol>
-          <li>In ChatGPT on the web, open <span class="ui">Settings</span> and find the apps or connectors section.</li>
-          <li>Under its advanced settings, turn on <span class="ui">Developer mode</span>.</li>
-          <li>Create a new app or connector: name it <span class="ui">Rendezvous</span>, paste your URL as the MCP server URL, and choose <span class="ui">No authentication</span>. The URL itself is your key.</li>
-          <li>In a new chat, pick Rendezvous from the tools menu before asking.</li>
+          <li>On the web, open <a href="https://chatgpt.com/plugins" target="_blank" rel="noopener noreferrer">chatgpt.com/plugins<span class="sr-only"> (opens in a new tab)</span></a>.</li>
+          <li>Select <span class="ui">+</span>, then <span class="ui">Add custom MCP server</span>.</li>
+          <li>Name it <span class="ui">Rendezvous</span> and paste your URL under <span class="ui">Connection</span>.</li>
+          <li>For authentication choose <span class="ui">No authentication</span>; the URL itself is your key.</li>
+          <li>Select <span class="ui">I understand and want to continue</span>, then <span class="ui">Create as a plugin</span>, and install it from your plugins list.</li>
+          <li>In a chat, type <kbd>@</kbd> and pick <span class="ui">Rendezvous</span>. ChatGPT asks you to confirm before it posts anything; approve only what you agreed to share.</li>
         </ol>
-        <p class="note">Developer mode isn't available on every plan, and ChatGPT may warn that custom connectors are unverified. That's expected for a server you add yourself.</p>
+        <p class="note">Custom MCP servers depend on your ChatGPT plan and workspace settings, and setup works on the web, not in the phone app. If ChatGPT can read your room but can't post to it, use Claude (the Free plan allows one custom connector) or Claude Code instead.</p>
         <p class="actions"><button type="button" class="btn small" data-copy="mcp-url" data-copy-name="your MCP URL"><span class="label">Copy URL</span></button></p>
       </div>
 
@@ -375,7 +429,19 @@ footer p { margin: 0 0 4px; }
           <pre><code id="cc-command"></code></pre>
           <div class="actions"><button type="button" class="btn small" data-copy="cc-command" data-copy-name="the command"><span class="label">Copy command</span></button></div>
         </div>
-        <p class="note">Then start Claude Code and run <code>/mcp</code> to check it's connected. By default the server is added for the current project; put <code>--scope user</code> before the name to use it everywhere.</p>
+        <p class="note">Then start Claude Code and run <code>/mcp</code> to check it's connected. It's added for your user, so it works in every project.</p>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="panel-cursor" aria-labelledby="tab-cursor" tabindex="0" hidden>
+        <p>With Cursor installed on this computer:</p>
+        <p class="actions" id="cursor-install-row"><a id="cursor-install" class="btn" role="link" aria-disabled="true" aria-describedby="cursor-gate">Add to Cursor</a></p>
+        <p class="note" id="cursor-gate">Copy your URL first (Copy URL, above). The button works once you have, so you still have the URL if Cursor doesn't open.</p>
+        <p class="note">Cursor opens and asks you to confirm installing Rendezvous. Make sure it's switched on in Cursor's MCP settings, then ask in the chat.</p>
+        <p>If the button doesn't open Cursor, add this to <code>~/.cursor/mcp.json</code> (keep any servers already listed there):</p>
+        <div class="codeblock">
+          <pre><code id="cursor-json"></code></pre>
+          <div class="actions"><button type="button" class="btn small" data-copy="cursor-json" data-copy-name="the config"><span class="label">Copy config</span></button></div>
+        </div>
       </div>
 
       <div class="tabpanel" role="tabpanel" id="panel-other" aria-labelledby="tab-other" tabindex="0" hidden>
@@ -386,6 +452,8 @@ footer p { margin: 0 0 4px; }
         </div>
         <p class="note">Some clients name the field differently (for example <code>serverUrl</code>) or want <code>"type": "http"</code>. No headers or OAuth are needed; the token is part of the URL.</p>
       </div>
+
+      <p class="note" id="last-checked">Steps last checked November 2026. Menu names change; look for "Connectors" (Claude) or "Plugins" (ChatGPT).</p>
 
       <h2 class="sub" id="say-title">What to say to your AI</h2>
       <p class="hint" id="say-hint">Once it's connected, try something like:</p>
@@ -431,6 +499,11 @@ footer p { margin: 0 0 4px; }
   // Base URL of the production Rendezvous Edge Function, without a trailing slash.
   // If you change it, also update connect-src in the CSP meta tag and the script hash (see note at top of file).
   const PROD_API_BASE = "https://zufosnvjijhqeepvawhi.supabase.co/functions/v1/rendezvous";
+  // "No AI app yet?" lane: after an invite signup, someone without an AI app adds free times (and optionally a budget
+  // band) through their own MCP URL, after a preview and an explicit click. Off: switching it on is the founder's
+  // decision (README, "Join page: no-AI lane"). To switch it on, set true, recompute the script hash and republish.
+  // While it is false, none of the lane is built and none of its code runs.
+  const QUICK_AVAILABILITY = false;
   // ======================================================
 
   /**
@@ -468,6 +541,10 @@ footer p { margin: 0 0 4px; }
   const NAME_MAX = 60;
   const LOOKUP_TIMEOUT_MS = 12000;
   const SIGNUP_TIMEOUT_MS = 25000;
+  const MCP_TIMEOUT_MS = 20000;
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const QUICK_MAX_ROWS = 20;
+  const QUICK_CURRENCIES = ["CAD", "USD", "EUR", "GBP", "AUD", "JPY", "MXN", "INR", "CHF", "CNY"];
 
   /** @param {string} id @returns {HTMLElement} */
   function $(id) {
@@ -483,6 +560,9 @@ footer p { margin: 0 0 4px; }
   const lede = $("lede");
   const existingUser = $("existing-user");
   const existingCode = $("existing-code");
+  const handoff = $("handoff");
+  const handoffBtn = $("handoff-btn");
+  const handoffLabel = $("handoff-label");
   const callout = $("invite-callout");
   const calloutTitle = $("callout-title");
   const calloutBody = $("callout-body");
@@ -502,7 +582,12 @@ footer p { margin: 0 0 4px; }
   const successTitle = $("success-title");
   const joinedLine = $("joined-line");
   const mcpUrlEl = $("mcp-url");
+  const phoneTip = $("phone-tip");
   const ccCommand = $("cc-command");
+  const cursorInstall = $("cursor-install");
+  const cursorInstallRow = $("cursor-install-row");
+  const cursorGate = $("cursor-gate");
+  const cursorJson = $("cursor-json");
   const jsonConfig = $("json-config");
   const promptList = $("prompts");
   const livePolite = $("live-polite");
@@ -519,7 +604,10 @@ footer p { margin: 0 0 4px; }
   let inviteRoomTitle = /** @type {string | null} */ (null);
   let busy = false;
   let done = false;
+  /** True once a copy button that holds the URL worked, or the visitor copied text containing it: the URL is saved. */
   let urlCopied = false;
+  /** The "Add to Cursor" deep link. It goes on the button only once urlCopied is true (see markUrlSaved). */
+  let cursorHref = "";
 
   // ---------- small helpers ----------
 
@@ -571,6 +659,330 @@ footer p { margin: 0 0 4px; }
     return /^[A-Za-z0-9._~:/%+=@-]+$/.test(s) ? s : "'" + s.replace(/'/g, "'\\''") + "'";
   }
 
+  /** The Claude Code command, at user scope so it works in every project. Pure (tests/web_test.ts). @param {string} mcpUrl */
+  function claudeCodeCommand(mcpUrl) {
+    return "claude mcp add --transport http --scope user rendezvous " + shellArg(mcpUrl);
+  }
+
+  /**
+   * One-click install links. Each one is a custom-scheme deep link that hands the URL straight to the app on this
+   * computer. Never an https redirector on a vendor's website: the link carries the token, so that would hand it to a
+   * third party. Pure (tests/web_test.ts). btoa throws on non-Latin-1 text; showSuccess handles that.
+   * @param {string} mcpUrl
+   * @returns {{ cursor: string }}
+   */
+  function installLinks(mcpUrl) {
+    const config = btoa(JSON.stringify({ url: mcpUrl }));
+    return { cursor: "cursor://anysphere.cursor-deeplink/mcp/install?name=rendezvous&config=" + encodeURIComponent(config) };
+  }
+
+  /** Touch-first devices (phones, most tablets), where most AI apps can't add a custom connector. */
+  function coarsePointer() {
+    return typeof matchMedia === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
+  }
+
+  // ---------- "No AI app yet?" lane: pure helpers (tests/web_test.ts evaluates them as written) ----------
+
+  /**
+   * A datetime-local value ("YYYY-MM-DDTHH:MM") plus a UTC offset in minutes east of UTC, as the ISO 8601 date-time
+   * the server stores: "YYYY-MM-DDTHH:MM:00+HH:MM". Null for any other shape, or an offset no time zone uses.
+   * @param {string} local
+   * @param {number} offsetMinutesEast
+   * @returns {string | null}
+   */
+  function toIsoWithOffset(local, offsetMinutesEast) {
+    const m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(?::00(?:\.0{1,3})?)?$/.exec(local);
+    if (!m || !Number.isInteger(offsetMinutesEast) || Math.abs(offsetMinutesEast) > 18 * 60) return null;
+    const abs = Math.abs(offsetMinutesEast);
+    const two = (/** @type {number} */ n) => String(n).padStart(2, "0");
+    return m[1] + ":00" + (offsetMinutesEast < 0 ? "-" : "+") + two(Math.floor(abs / 60)) + ":" + two(abs % 60);
+  }
+
+  /**
+   * A datetime-local value read in this browser's time zone, with that zone's UTC offset at that moment (a time after
+   * a DST change gets the new offset). Null when the value is malformed or names a wall-clock time that doesn't exist
+   * here, such as 02:30 on the night the clocks jump to 03:00: the browser moves such a time, so its local fields no
+   * longer match what was picked.
+   * @param {string} localValue
+   * @returns {string | null}
+   */
+  function localToIso(localValue) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::00(?:\.0{1,3})?)?$/.exec(localValue);
+    if (!m) return null;
+    const d = new Date(m[1] + "-" + m[2] + "-" + m[3] + "T" + m[4] + ":" + m[5]);
+    if (Number.isNaN(d.getTime())) return null;
+    const same = d.getFullYear() === Number(m[1]) && d.getMonth() + 1 === Number(m[2]) && d.getDate() === Number(m[3]) &&
+      d.getHours() === Number(m[4]) && d.getMinutes() === Number(m[5]);
+    return same ? toIsoWithOffset(localValue, -d.getTimezoneOffset()) : null;
+  }
+
+  /**
+   * Windows sorted by instant, with overlapping or touching ones merged. Every endpoint that survives keeps the exact
+   * string it came with. The input is not modified.
+   * @param {{ start: string, end: string }[]} windows
+   * @returns {{ start: string, end: string }[]}
+   */
+  function mergeWindows(windows) {
+    const sorted = windows.map((w) => ({ start: w.start, end: w.end, s: Date.parse(w.start), e: Date.parse(w.end) }))
+      .sort((a, b) => a.s - b.s || a.e - b.e);
+    /** @type {{ start: string, end: string, s: number, e: number }[]} */
+    const out = [];
+    for (const w of sorted) {
+      const last = out[out.length - 1];
+      if (last && w.s <= last.e) {
+        if (w.e > last.e) {
+          last.end = w.end;
+          last.e = w.e;
+        }
+      } else {
+        out.push(w);
+      }
+    }
+    return out.map((w) => ({ start: w.start, end: w.end }));
+  }
+
+  /**
+   * One instant as "Fri, Jan 15, 6:00 PM" in the zone `tz` ("" means this browser's).
+   * @param {string} iso
+   * @param {string} tz
+   * @param {string} [locale]
+   */
+  function formatWhen(iso, tz, locale) {
+    return new Intl.DateTimeFormat(locale, {
+      weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: tz || undefined,
+    }).format(new Date(iso));
+  }
+
+  /**
+   * One window as "Fri, Jan 15, 6:00 PM - Sun, Jan 17, 10:00 PM".
+   * @param {{ start: string, end: string }} w
+   * @param {string} tz
+   * @param {string} [locale]
+   */
+  function formatWindow(w, tz, locale) {
+    return formatWhen(w.start, tz, locale) + " - " + formatWhen(w.end, tz, locale);
+  }
+
+  /**
+   * "Budget: up to 600 CAD per person for the whole plan" (the band's meaning on the server).
+   * @param {{ min?: number, max?: number, currency: string }} b
+   * @param {string} [locale]
+   */
+  function budgetText(b, locale) {
+    const n = (/** @type {number} */ x) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(x);
+    const band = b.min !== undefined && b.max !== undefined
+      ? (b.min === b.max ? n(b.max) : n(b.min) + " to " + n(b.max))
+      : b.max !== undefined
+      ? "up to " + n(b.max)
+      : "at least " + n(/** @type {number} */ (b.min));
+    return "Budget: " + band + " " + b.currency + " per person for the whole plan";
+  }
+
+  /**
+   * The consent text: one line per window exactly as it will be sent, in the zone `tz`, then the budget band if any.
+   * @param {{ start: string, end: string }[]} windows
+   * @param {string} tz
+   * @param {{ min?: number, max?: number, currency: string } | null} budget
+   * @param {string} [locale]
+   * @returns {string}
+   */
+  function buildPreview(windows, tz, budget, locale) {
+    const lines = windows.map((w) => formatWindow(w, tz, locale) + (tz ? " (" + tz + ")" : ""));
+    if (budget) lines.push(budgetText(budget, locale));
+    return lines.join("\n");
+  }
+
+  /**
+   * Checks the lane's fields before anything is shown or sent: at most QUICK_MAX_ROWS rows, each with a start and an
+   * end that exist in this zone, the end after the start; an optional budget of amounts >= 0, min <= max, in a listed
+   * currency. Returns the error for each field, or (when ok) the merged windows and the budget to send.
+   * @param {{ start: string, end: string }[]} rows raw datetime-local values
+   * @param {{ min: string, max: string, currency: string }} money raw budget fields
+   * @param {(local: string) => string | null} toIso localToIso on the page
+   */
+  function checkQuickInput(rows, money, toIso) {
+    const LOCAL = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::00(?:\.0{1,3})?)?$/;
+    /** @type {({ field: "start" | "end", message: string } | null)[]} */
+    const rowErrors = rows.map(() => null);
+    /** @type {{ start: string, end: string }[]} */
+    const windows = [];
+    const formError = rows.length === 0
+      ? "Add at least one time."
+      : rows.length > QUICK_MAX_ROWS
+      ? "You can add up to " + QUICK_MAX_ROWS + " times."
+      : null;
+    // A row left completely empty (an extra "Add another time") is skipped while another row has a time in it.
+    const anyFilled = rows.some((r) => r.start || r.end);
+    rows.forEach((r, i) => {
+      if (!r.start && !r.end && (anyFilled || i > 0)) return;
+      /** @param {string} v @param {"start" | "end"} field */
+      const read = (v, field) => {
+        if (!v) {
+          rowErrors[i] = { field, message: field === "start" ? "Add a start date and time." : "Add an end date and time." };
+          return null;
+        }
+        if (!LOCAL.test(v)) {
+          rowErrors[i] = { field, message: "Pick a date and a time, for example 2027-01-15 18:00." };
+          return null;
+        }
+        const iso = toIso(v);
+        if (!iso) {
+          rowErrors[i] = { field, message: "That time doesn't exist in your time zone: the clocks change then. Pick another time." };
+        }
+        return iso;
+      };
+      const start = read(r.start, "start");
+      if (!start) return;
+      const end = read(r.end, "end");
+      if (!end) return;
+      if (Date.parse(end) <= Date.parse(start)) {
+        rowErrors[i] = { field: "end", message: "The end has to be after the start." };
+        return;
+      }
+      windows.push({ start, end });
+    });
+
+    /** @type {{ field: "min" | "max" | "currency", message: string } | null} */
+    let budgetError = null;
+    /** @type {{ min?: number, max?: number, currency: string } | null} */
+    let budget = null;
+    /** @param {string} raw @returns {number | undefined | null} undefined when blank, null when not an amount */
+    const amount = (raw) => {
+      const t = raw.trim();
+      if (!t) return undefined;
+      const n = Number(t);
+      return Number.isFinite(n) && n >= 0 ? n : null;
+    };
+    const min = amount(money.min);
+    const max = amount(money.max);
+    if (min === null) {
+      budgetError = { field: "min", message: "Enter the minimum as a number, 0 or more." };
+    } else if (max === null) {
+      budgetError = { field: "max", message: "Enter the maximum as a number, 0 or more." };
+    } else if (min !== undefined || max !== undefined) {
+      if (min !== undefined && max !== undefined && min > max) {
+        budgetError = { field: "min", message: "The minimum can't be more than the maximum." };
+      } else if (!QUICK_CURRENCIES.includes(money.currency)) {
+        budgetError = { field: "currency", message: "Pick a currency." };
+      } else {
+        budget = { ...(min !== undefined ? { min } : {}), ...(max !== undefined ? { max } : {}), currency: money.currency };
+      }
+    }
+    const ok = formError === null && budgetError === null && rowErrors.every((e) => e === null);
+    return { ok, rowErrors, budgetError, formError, windows: ok ? mergeWindows(windows) : [], budget: ok ? budget : null };
+  }
+
+  /**
+   * What room_solve's availability result means for the person, in counts and times only. It never shows a name,
+   * although the result carries some (missing, best_windows[].available). N = members counted, M = N + members who
+   * haven't posted. `times` says whether the text shows times (so the zone note applies).
+   * @param {any} av room_solve's `availability`
+   * @param {string} tz
+   * @param {string} [locale]
+   * @returns {{ lead: string, windows: string[], times: boolean }}
+   */
+  function describeSolve(av, tz, locale) {
+    const a = av && typeof av === "object" ? av : {};
+    const n = Number.isInteger(a.members_counted) ? a.members_counted : 0;
+    const m = n + (Array.isArray(a.missing) ? a.missing.length : 0);
+    if (n < 2) return { lead: "Only you have shared times so far. Check back after others post.", windows: [], times: false };
+    /** @param {any} w */
+    const valid = (w) =>
+      !!w && typeof w.start === "string" && typeof w.end === "string" && Number.isFinite(Date.parse(w.start)) &&
+      Date.parse(w.end) > Date.parse(w.start);
+    const windows = (Array.isArray(a.windows) ? a.windows : []).filter(valid).slice(0, 5);
+    if (windows.length) {
+      return {
+        lead: "Times that work so far for " + n + " of " + m + " people:",
+        windows: windows.map((/** @type {{ start: string, end: string }} */ w) => {
+          const h = Math.round((Date.parse(w.end) - Date.parse(w.start)) / 360000) / 10;
+          return formatWindow(w, tz, locale) + " (" + h + (h === 1 ? " hour)" : " hours)");
+        }),
+        times: true,
+      };
+    }
+    const best = (Array.isArray(a.best_windows) ? a.best_windows : []).find(valid);
+    if (best) {
+      const k = Number.isInteger(best.available_count)
+        ? best.available_count
+        : Array.isArray(best.attendees)
+        ? best.attendees.length
+        : null;
+      return {
+        lead: "No time works for everyone yet. Best so far: " + formatWindow(best, tz, locale) +
+          (k === null ? "." : " (" + k + " of " + n + " people)."),
+        windows: [],
+        times: true,
+      };
+    }
+    return { lead: "No time works for everyone yet.", windows: [], times: false };
+  }
+
+  /**
+   * One tools/call request as the join page sends it. The _meta tag marks the call as the page's rather than an AI's,
+   * so the server counts its room_solve as useful_via_page.
+   * @param {number} id
+   * @param {string} name
+   * @param {Record<string, unknown>} args
+   */
+  function toolCallBody(id, name, args) {
+    return { jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args, _meta: { "rendezvous/via": "joinpage" } } };
+  }
+
+  /**
+   * The fetch options for one MCP request: content-type (allowed by the server's CORS preflight) and accept
+   * (CORS-safelisted), nothing else, since any other header would need a CORS change on the server.
+   * @param {unknown} body
+   */
+  function mcpRequest(body) {
+    return {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify(body),
+    };
+  }
+
+  /**
+   * The path of a personal MCP URL under this page's API base, or null when it points anywhere else: the token in it
+   * is only ever sent to API_BASE.
+   * @param {string} mcpUrl
+   * @param {string} apiBase
+   * @returns {string | null}
+   */
+  function mcpPathOf(mcpUrl, apiBase) {
+    const prefix = apiBase + "/mcp/";
+    if (!mcpUrl.startsWith(prefix)) return null;
+    const token = mcpUrl.slice(prefix.length);
+    return /^[A-Za-z0-9_-]{20,200}$/.test(token) ? "/mcp/" + token : null;
+  }
+
+  /**
+   * What one tools/call answer means for the lane: the tool's result, or the text to show. A refusal shows the
+   * server's own words, clipped (they describe the person's own input). Never throws.
+   * @param {number} status
+   * @param {any} data
+   * @returns {{ ok: true, value: any } | { ok: false, message: string }}
+   */
+  function readToolResult(status, data) {
+    const d = data && typeof data === "object" ? data : {};
+    const r = d.result && typeof d.result === "object" ? d.result : null;
+    if (status === 200 && r) {
+      const text = Array.isArray(r.content) && r.content[0] && typeof r.content[0].text === "string" ? r.content[0].text : "";
+      if (r.isError === true) return { ok: false, message: clip(text || "Rendezvous didn't accept this.", 300) };
+      if (r.structuredContent && typeof r.structuredContent === "object") return { ok: true, value: r.structuredContent };
+      try {
+        const v = JSON.parse(text);
+        if (v && typeof v === "object") return { ok: true, value: v };
+      } catch {
+        // not JSON: reported below
+      }
+    }
+    if (d.error && typeof d.error.message === "string" && d.error.message) return { ok: false, message: clip(d.error.message, 300) };
+    if (status === 200) return { ok: false, message: "Rendezvous sent an answer this page doesn't understand. Please try again." };
+    if (status === 429) return { ok: false, message: "Too many attempts. Please wait a minute and try again." };
+    return { ok: false, message: "Something went wrong on our side. Please try again in a moment" + (status ? " (error " + status + ")." : ".") };
+  }
+
   // ---------- invite state ----------
 
   /**
@@ -588,6 +1000,7 @@ footer p { margin: 0 0 4px; }
     lede.textContent = DEFAULT_LEDE;
     existingUser.hidden = true;
     existingCode.textContent = "";
+    handoff.hidden = true;
     callout.hidden = true;
     callout.className = "callout";
     calloutActions.hidden = true;
@@ -615,6 +1028,8 @@ footer p { margin: 0 0 4px; }
         existingCode.textContent = inviteCode;
         existingUser.hidden = false;
       }
+      // Most AI apps can't add a custom connector on a phone: suggest moving to a computer before signing up there.
+      handoff.hidden = !coarsePointer();
       document.title = clip("Join “" + inviteRoomTitle + "”", 70) + " · Rendezvous";
       announce("Invite found. You're invited to " + inviteRoomTitle + ".");
     } else if (state === "invalid") {
@@ -638,6 +1053,7 @@ footer p { margin: 0 0 4px; }
       announce("We couldn't check your invite. You can try again or sign up anyway.");
     }
     if (!busy) submitLabel.textContent = inviteCode ? "Create account & join" : "Create my account";
+    if (QUICK_AVAILABILITY) syncNeedsLaneNote(inviteCode !== null);
   }
 
   async function checkInvite() {
@@ -795,6 +1211,7 @@ footer p { margin: 0 0 4px; }
       if (status === 200 && data && typeof data.mcp_url === "string" && /^https?:\/\/\S+$/.test(data.mcp_url) && data.mcp_url.length < 2048) {
         const joined = code && typeof data.room_title === "string" ? clip(data.room_title, 120) : null;
         showSuccess(data.mcp_url, joined);
+        if (QUICK_AVAILABILITY && joined !== null) showQuickLane(data.mcp_url, data.room_id);
         return;
       }
       if (status === 410) {
@@ -865,12 +1282,12 @@ footer p { margin: 0 0 4px; }
   function examplePrompts(roomTitle) {
     if (roomTitle) {
       return [
-        "Check my Rendezvous rooms and add my availability to the room I just joined, for the dates we're discussing. Show me what you'll post before you post it.",
-        "What works for everyone in the Rendezvous room I just joined so far? Run the solver and summarize the options.",
+        "Check my Rendezvous rooms and read the room I just joined. Ask me when I'm free for the dates it's planning, then show me exactly what you'll post before you post it.",
+        "Once others have posted in my Rendezvous room, run the solver and explain the options in my local time.",
       ];
     }
     return [
-      "Create a Rendezvous room for our ski trip and give me the invite link.",
+      "Create a Rendezvous room for our ski trip, a weekend in January (about 2 days), and give me the invite link and a message I can send to the group.",
       "Add my availability for the next two weekends to the room. Free windows only, and check with me first.",
     ];
   }
@@ -879,8 +1296,21 @@ footer p { margin: 0 0 4px; }
   function showSuccess(mcpUrl, roomTitle) {
     done = true;
     mcpUrlEl.textContent = mcpUrl;
-    ccCommand.textContent = "claude mcp add --transport http rendezvous " + shellArg(mcpUrl);
+    phoneTip.hidden = !coarsePointer();
+    ccCommand.textContent = claudeCodeCommand(mcpUrl);
     jsonConfig.textContent = JSON.stringify({ mcpServers: { rendezvous: { url: mcpUrl } } }, null, 2);
+    cursorJson.textContent = jsonConfig.textContent; // Cursor's mcp.json has the same shape
+    // Cursor has no phone app, and on a phone any installed app can register the cursor:// scheme and would be handed
+    // this secret URL, so the one-click link only exists on devices with a fine pointer (desktops, laptops).
+    try {
+      cursorHref = coarsePointer() ? "" : installLinks(mcpUrl).cursor;
+    } catch {
+      cursorHref = "";
+    }
+    if (!cursorHref) {
+      cursorInstallRow.hidden = true; // the JSON config below still works
+      cursorGate.hidden = true;
+    }
 
     if (roomTitle) {
       joinedLine.textContent = "You've joined “" + roomTitle + "”. Connect your AI below and it can pick up from there.";
@@ -924,6 +1354,395 @@ footer p { margin: 0 0 4px; }
     });
   }
 
+  /**
+   * The URL is saved. Only now does "Add to Cursor" get its cursor:// link. Following that link fires beforeunload in
+   * Chromium although the page stays, and in a browser with no handler for cursor:// (Firefox without Cursor) it can
+   * replace this page with an error page; Back then reloads the page, and the once-shown URL is gone. Because the
+   * button works only after a copy, the "save your URL" prompt never needs to be skipped for it.
+   */
+  function markUrlSaved() {
+    urlCopied = true;
+    if (!cursorHref) return;
+    cursorInstall.setAttribute("href", cursorHref);
+    // the APG disabled-link pattern (no href, role=link, aria-disabled) ends here: now it is an ordinary link
+    for (const a of ["role", "aria-disabled", "aria-describedby"]) cursorInstall.removeAttribute(a);
+    cursorGate.hidden = true;
+  }
+
+  cursorInstall.addEventListener("click", (e) => {
+    if (urlCopied) return; // live link: the browser hands it to Cursor
+    e.preventDefault();
+    announce("Copy your URL first. Add to Cursor works once it's copied.", true);
+  });
+
+  // Copying the URL by hand (when the Copy button couldn't, the text is selected for Control C) counts as saving it.
+  document.addEventListener("copy", () => {
+    const url = mcpUrlEl.textContent || "";
+    if (done && url && String(getSelection() || "").includes(url)) markUrlSaved();
+  });
+
+  // ---------- "No AI app yet?" lane (runs only when QUICK_AVAILABILITY is true) ----------
+
+  /**
+   * A new element. Text goes in only as Text nodes (append), never as markup.
+   * @param {string} tag
+   * @param {Record<string, string>} [attrs]
+   * @param {(Node | string)[]} [children]
+   * @returns {HTMLElement}
+   */
+  function el(tag, attrs, children) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+    node.append(...(children || []));
+    return node;
+  }
+
+  /**
+   * While signing up would join a room (the only case the lane is offered), #needs mentions the way in without an AI
+   * app. Called only when QUICK_AVAILABILITY is true.
+   * @param {boolean} show
+   */
+  function syncNeedsLaneNote(show) {
+    let note = document.getElementById("needs-lane");
+    if (!note && show) {
+      note = el("span", { id: "needs-lane" }, [" No AI app? After you sign up you can add your free times on this page instead."]);
+      $("needs").append(note);
+    }
+    if (note) note.hidden = !show;
+  }
+
+  /**
+   * The "No AI app yet?" lane under the connect steps, after an invite signup; called only when QUICK_AVAILABILITY is
+   * true. Someone who can't connect an AI adds free time windows (and optionally a budget band) and reviews exactly
+   * what will be shared. Nothing is sent, not even whoami, until they click "Share these times with the room"; then
+   * the page calls their own MCP URL, at this page's API base and nowhere else. The result is shown as counts and
+   * times, never names. The token stays in memory.
+   * @param {string} mcpUrl
+   * @param {unknown} roomIdHint room_id from /api/signup (0.3.0 servers), else undefined
+   */
+  function showQuickLane(mcpUrl, roomIdHint) {
+    const mcpPath = mcpPathOf(mcpUrl, API_BASE);
+    if (!mcpPath || document.getElementById("quick-avail")) return;
+    let tz = "";
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    } catch {
+      tz = "";
+    }
+    let roomId = typeof roomIdHint === "string" && UUID_RE.test(roomIdHint) ? roomIdHint : null;
+    let rpcId = 0;
+    let rowSeq = 0;
+    let sending = false;
+    /** @type {{ windows: { start: string, end: string }[], budget: { min?: number, max?: number, currency: string } | null } | null} */
+    let pending = null;
+    /** @type {{ box: HTMLElement, legend: HTMLElement, start: HTMLInputElement, end: HTMLInputElement, error: HTMLElement, remove: HTMLElement }[]} */
+    const rows = [];
+
+    // ----- form -----
+    const rowList = el("div", { id: "qa-rows" });
+    const addBtn = /** @type {HTMLButtonElement} */ (el("button", { type: "button", class: "btn small", id: "qa-add" }, ["Add another time"]));
+    const maxNote = el("p", { class: "hint", id: "qa-max-note", hidden: "" }, ["That's the most you can add here (" + QUICK_MAX_ROWS + ")."]);
+    const formError = el("p", { class: "field-error", id: "qa-form-error", hidden: "" });
+    const amountAttrs = { min: "0", step: "any", inputmode: "decimal", "aria-describedby": "qa-budget-hint qa-budget-error" };
+    const minInput = /** @type {HTMLInputElement} */ (el("input", { type: "number", id: "qa-min", ...amountAttrs }));
+    const maxInput = /** @type {HTMLInputElement} */ (el("input", { type: "number", id: "qa-max", ...amountAttrs }));
+    const currency = /** @type {HTMLSelectElement} */ (el(
+      "select",
+      { id: "qa-currency", "aria-describedby": "qa-budget-hint qa-budget-error" },
+      QUICK_CURRENCIES.map((c) => el("option", { value: c }, [c])),
+    ));
+    const budgetError = el("p", { class: "field-error", id: "qa-budget-error", hidden: "" });
+    const againNote = el("p", { class: "hint", hidden: "" }, ["Sharing again replaces the times you shared before."]);
+    const form = /** @type {HTMLFormElement} */ (el("form", { id: "qa-form", novalidate: "" }, [
+      el("p", { class: "hint" }, [
+        "Add the times you're free for this plan. Only the start and end of each time is shared, never what you're doing " +
+          "otherwise. You'll see exactly what will be shared before anything is sent.",
+      ]),
+      el("p", { class: "hint", id: "qa-tz" }, [tz ? "Times are in your time zone, " + tz + "." : "Times are in this device's time zone."]),
+      rowList,
+      formError,
+      el("p", { class: "actions" }, [addBtn]),
+      maxNote,
+      el("fieldset", { class: "money" }, [
+        el("legend", {}, ["Budget ", el("span", { class: "optional" }, ["(optional)"])]),
+        el("p", { class: "hint", id: "qa-budget-hint" }, ["Per person, for the whole plan. Leave it empty to skip it."]),
+        el("div", { class: "money-grid" }, [
+          el("div", {}, [el("label", { for: "qa-min" }, ["Minimum"]), minInput]),
+          el("div", {}, [el("label", { for: "qa-max" }, ["Maximum"]), maxInput]),
+          el("div", {}, [el("label", { for: "qa-currency" }, ["Currency"]), currency]),
+        ]),
+        budgetError,
+      ]),
+      againNote,
+      el("p", { class: "actions" }, [el("button", { type: "submit", class: "btn primary block", id: "qa-review" }, ["Review"])]),
+    ]));
+
+    // ----- preview (consent) -----
+    const previewLead = el("p", { id: "qa-preview-lead", tabindex: "-1" });
+    const previewText = el("pre", { id: "qa-preview-text" });
+    const shareLabel = el("span", { class: "label" }, ["Share these times with the room"]);
+    const shareBtn = el("button", { type: "button", class: "btn primary", id: "qa-share" }, [el("span", { class: "spinner", "aria-hidden": "true" }), shareLabel]);
+    const editBtn = /** @type {HTMLButtonElement} */ (el("button", { type: "button", class: "btn", id: "qa-edit" }, ["Edit"]));
+    const preview = el("div", { id: "qa-preview", hidden: "" }, [
+      previewLead,
+      previewText,
+      el("p", { class: "hint" }, ["The room sees them as yours. Nothing is sent until you choose Share."]),
+      el("p", { class: "actions" }, [shareBtn, editBtn]),
+    ]);
+
+    // ----- error and result -----
+    const errorBox = el("div", { class: "callout error", id: "qa-error", hidden: "" });
+    const resultLead = el("p", { id: "qa-result-lead" });
+    const resultList = el("ul", { id: "qa-result-list" });
+    const resultZone = el("p", { class: "hint" }, [tz ? "Times are in your time zone, " + tz + "." : "Times are in this device's time zone."]);
+    const doneLine = el("p", { class: "quick-done", id: "qa-done", tabindex: "-1" }, [el("strong", {}, ["Your times are shared with the room."])]);
+    const changeBtn = el("button", { type: "button", class: "btn", id: "qa-change" }, ["Change my times"]);
+    const result = el("div", { id: "qa-result", hidden: "" }, [doneLine, resultLead, resultList, resultZone, el("p", { class: "actions" }, [changeBtn])]);
+
+    const details = el("details", { class: "quick", id: "quick-avail" }, [
+      el("summary", {}, ["No AI app yet? Add your free times here (about a minute)"]),
+      el("div", { class: "quick-body" }, [form, preview, errorBox, result]),
+    ]);
+    $("say-title").before(details);
+    for (const id of ["panel-claude", "panel-chatgpt"]) {
+      const note = document.querySelector("#" + id + " .note");
+      if (note) note.append(" If your plan can't add it, use \"No AI app yet?\" below.");
+    }
+
+    // ----- rows -----
+    function renumber() {
+      rows.forEach((r, i) => {
+        r.legend.textContent = "Time " + (i + 1);
+        r.remove.setAttribute("aria-label", "Remove time " + (i + 1));
+        r.remove.hidden = rows.length === 1;
+      });
+      const full = rows.length >= QUICK_MAX_ROWS;
+      addBtn.hidden = full;
+      maxNote.hidden = !full;
+    }
+
+    function addRow() {
+      if (rows.length >= QUICK_MAX_ROWS) return null;
+      const n = ++rowSeq;
+      const errId = "qa-row-error-" + n;
+      const start = /** @type {HTMLInputElement} */ (el("input", { type: "datetime-local", id: "qa-start-" + n, "aria-describedby": errId + " qa-tz" }));
+      const end = /** @type {HTMLInputElement} */ (el("input", { type: "datetime-local", id: "qa-end-" + n, "aria-describedby": errId + " qa-tz" }));
+      const legend = el("legend");
+      const error = el("p", { class: "field-error", id: errId, hidden: "" });
+      const remove = el("button", { type: "button", class: "btn small" }, ["Remove"]);
+      const box = el("fieldset", { class: "slot" }, [
+        legend,
+        el("div", { class: "pair" }, [
+          el("div", {}, [el("label", { for: start.id }, ["From"]), start]),
+          el("div", {}, [el("label", { for: end.id }, ["Until"]), end]),
+        ]),
+        error,
+        el("p", { class: "slot-actions" }, [remove]),
+      ]);
+      const row = { box, legend, start, end, error, remove };
+      remove.addEventListener("click", () => {
+        const i = rows.indexOf(row);
+        if (i < 0 || rows.length === 1) return;
+        rows.splice(i, 1);
+        box.remove();
+        renumber();
+        rows[Math.min(i, rows.length - 1)].start.focus();
+        announce("Time removed.");
+      });
+      rows.push(row);
+      rowList.append(box);
+      renumber();
+      return row;
+    }
+
+    /** @param {(typeof rows)[number]} r @param {{ field: "start" | "end", message: string } | null} err */
+    function setRowError(r, err) {
+      r.error.textContent = err ? err.message : "";
+      r.error.hidden = !err;
+      for (const input of [r.start, r.end]) {
+        if (err && input === (err.field === "start" ? r.start : r.end)) input.setAttribute("aria-invalid", "true");
+        else input.removeAttribute("aria-invalid");
+      }
+    }
+
+    /** @param {{ field: "min" | "max" | "currency", message: string } | null} err */
+    function setBudgetError(err) {
+      budgetError.textContent = err ? err.message : "";
+      budgetError.hidden = !err;
+      const fields = { min: minInput, max: maxInput, currency };
+      for (const [k, input] of Object.entries(fields)) {
+        if (err && err.field === k) input.setAttribute("aria-invalid", "true");
+        else input.removeAttribute("aria-invalid");
+      }
+    }
+
+    /** A number field's raw text; "not a number" when the browser holds unparseable input (it reports value ""). */
+    const rawAmount = (/** @type {HTMLInputElement} */ input) => (input.validity.badInput ? "not a number" : input.value);
+
+    /** @param {string} title @param {string} body */
+    function showError(title, body) {
+      errorBox.replaceChildren(el("p", {}, [el("strong", {}, [title]), body]));
+      errorBox.hidden = false;
+      announce(title + body, true);
+    }
+    function hideError() {
+      errorBox.hidden = true;
+      errorBox.replaceChildren();
+    }
+
+    /** @param {boolean} on */
+    function setSharing(on) {
+      shareBtn.setAttribute("aria-disabled", on ? "true" : "false");
+      shareBtn.setAttribute("aria-busy", on ? "true" : "false");
+      editBtn.disabled = on;
+      shareLabel.textContent = on ? "Sharing…" : "Share these times with the room";
+    }
+
+    /** One tools/call with the person's own token, to API_BASE only (through the page's one request helper). */
+    async function callTool(/** @type {string} */ name, /** @type {Record<string, unknown>} */ args) {
+      const { status, data } = await api(mcpPath, mcpRequest(toolCallBody(++rpcId, name, args)), MCP_TIMEOUT_MS);
+      return readToolResult(status, data);
+    }
+
+    /** @param {any} av */
+    function showResult(av) {
+      const d = describeSolve(av, tz);
+      resultLead.textContent = d.lead;
+      resultList.replaceChildren(...d.windows.map((t) => el("li", {}, [t])));
+      resultList.hidden = d.windows.length === 0;
+      resultZone.hidden = !d.times;
+      againNote.hidden = false;
+      pending = null;
+      form.hidden = true;
+      preview.hidden = true;
+      result.hidden = false;
+      doneLine.focus();
+      announce("Your times are shared with the room. " + d.lead);
+    }
+
+    form.addEventListener("input", (e) => {
+      for (const r of rows) if (e.target === r.start || e.target === r.end) setRowError(r, null);
+      if (e.target === minInput || e.target === maxInput || e.target === currency) setBudgetError(null);
+    });
+
+    addBtn.addEventListener("click", () => {
+      const r = addRow();
+      if (r) r.start.focus();
+    });
+
+    // Review: check everything, then show exactly what would be sent. Nothing is sent here.
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (sending) return;
+      hideError();
+      const checked = checkQuickInput(
+        rows.map((r) => ({ start: r.start.value, end: r.end.value })),
+        { min: rawAmount(minInput), max: rawAmount(maxInput), currency: currency.value },
+        localToIso,
+      );
+      rows.forEach((r, i) => setRowError(r, checked.rowErrors[i] || null));
+      setBudgetError(checked.budgetError);
+      formError.textContent = checked.formError || "";
+      formError.hidden = !checked.formError;
+      if (!checked.ok) {
+        const bad = rows.findIndex((_, i) => checked.rowErrors[i]);
+        const rowErr = bad >= 0 ? checked.rowErrors[bad] : null;
+        const be = checked.budgetError;
+        const target = rowErr
+          ? (rowErr.field === "start" ? rows[bad].start : rows[bad].end)
+          : be
+          ? (be.field === "min" ? minInput : be.field === "max" ? maxInput : currency)
+          : rows[0].start;
+        target.focus();
+        announce("Please fix the highlighted fields. Nothing has been shared.", true);
+        return;
+      }
+      pending = { windows: checked.windows, budget: checked.budget };
+      previewLead.textContent = checked.budget
+        ? "You're sharing only these start and end times, and this budget, with the people in this room:"
+        : "You're sharing only these start and end times with the people in this room:";
+      previewText.textContent = buildPreview(checked.windows, tz, checked.budget);
+      form.hidden = true;
+      preview.hidden = false;
+      previewLead.focus();
+    });
+
+    editBtn.addEventListener("click", () => {
+      if (sending) return;
+      pending = null;
+      hideError();
+      preview.hidden = true;
+      form.hidden = false;
+      rows[0].start.focus();
+    });
+
+    // Share: the only place the lane sends anything.
+    shareBtn.addEventListener("click", async () => {
+      if (sending || !pending) return;
+      const { windows, budget } = pending;
+      sending = true;
+      setSharing(true);
+      hideError();
+      let timesShared = false;
+      try {
+        if (!roomId) {
+          // 0.2.2 servers don't return room_id on signup: a new account that joined through an invite has one room.
+          const who = await callTool("whoami", {});
+          if (!who.ok) {
+            showError("Rendezvous didn't accept this. ", who.message);
+            return;
+          }
+          const rooms = Array.isArray(who.value.rooms) ? who.value.rooms : [];
+          const only = rooms.length === 1 && rooms[0] && typeof rooms[0].room_id === "string" && UUID_RE.test(rooms[0].room_id)
+            ? rooms[0].room_id
+            : null;
+          if (!only) {
+            showError("We couldn't tell which room to add your times to. ", "Connect your AI using the steps above and ask it to post them instead.");
+            return;
+          }
+          roomId = only;
+        }
+        const posted = await callTool("room_post", { room_id: roomId, type: "availability", payload: tz ? { windows, timezone: tz } : { windows } });
+        if (!posted.ok) {
+          showError("Rendezvous didn't accept these times. ", posted.message);
+          return;
+        }
+        timesShared = true;
+        if (budget) {
+          const b = await callTool("room_post", { room_id: roomId, type: "constraint", payload: { kind: "budget", ...budget } });
+          if (!b.ok) {
+            showError("Your times were shared, but your budget wasn't. ", b.message);
+            return;
+          }
+        }
+        const solved = await callTool("room_solve", { room_id: roomId, kind: "availability" });
+        if (!solved.ok) {
+          showError("Your times were shared, but we couldn't compare them with the others' just now. ", solved.message);
+          return;
+        }
+        showResult(solved.value.availability);
+      } catch (e) {
+        const timedOut = e instanceof DOMException && e.name === "AbortError";
+        const title = timesShared
+          ? (timedOut ? "Your times were shared, but then Rendezvous took too long to answer. " : "Your times were shared, but then we couldn't reach Rendezvous. ")
+          : (timedOut ? "Rendezvous is taking too long to answer. " : "We couldn't reach Rendezvous. ");
+        showError(title, "Check your connection and try again.");
+      } finally {
+        sending = false;
+        setSharing(false);
+      }
+    });
+
+    changeBtn.addEventListener("click", () => {
+      hideError();
+      result.hidden = true;
+      form.hidden = false;
+      rows[0].start.focus();
+    });
+
+    addRow();
+  }
+
   // ---------- copy buttons ----------
 
   /** @param {string} text @returns {Promise<boolean>} */
@@ -964,6 +1783,23 @@ footer p { margin: 0 0 4px; }
     sel.addRange(range);
   }
 
+  /** Shows "Copied" on a button for two seconds. @param {Element} btn */
+  function flashCopied(btn) {
+    const label = btn.querySelector(".label");
+    if (!(label instanceof HTMLElement)) return;
+    if (!label.dataset.original) label.dataset.original = label.textContent || "";
+    const original = label.dataset.original;
+    label.textContent = "Copied";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      label.textContent = original;
+      btn.classList.remove("copied");
+    }, 2000);
+  }
+
+  /** Copy buttons whose text contains the MCP URL: copying one counts as saving it. */
+  const URL_SOURCES = ["mcp-url", "cc-command", "json-config", "cursor-json"];
+
   document.addEventListener("click", async (e) => {
     const target = e.target instanceof Element ? e.target.closest("button[data-copy]") : null;
     if (!(target instanceof HTMLButtonElement)) return;
@@ -971,27 +1807,47 @@ footer p { margin: 0 0 4px; }
     if (!source) return;
     const text = source.textContent || "";
     const what = target.dataset.copyName || "it";
-    const label = target.querySelector(".label");
     const ok = await copyText(text);
     if (ok) {
-      if (target.dataset.copy === "mcp-url" || target.dataset.copy === "cc-command" || target.dataset.copy === "json-config") {
-        urlCopied = true;
-      }
-      if (label instanceof HTMLElement) {
-        if (!label.dataset.original) label.dataset.original = label.textContent || "";
-        const original = label.dataset.original;
-        label.textContent = "Copied";
-        target.classList.add("copied");
-        setTimeout(() => {
-          label.textContent = original;
-          target.classList.remove("copied");
-        }, 2000);
-      }
+      if (URL_SOURCES.includes(target.dataset.copy || "")) markUrlSaved();
+      flashCopied(target);
       announce("Copied " + what + " to the clipboard.");
     } else {
       selectContents(source);
       announce("Couldn't copy automatically. The text is selected; press Control C, or Command C on a Mac.", true);
     }
+  });
+
+  // ---------- phone handoff (before signup) ----------
+
+  /**
+   * Sends this invite page's own address to the person (share sheet), or copies it. Only ever location.href, the
+   * invite link they opened: before signup the page holds no personal link. Resolves with what happened.
+   * @returns {Promise<"shared" | "cancelled" | "copied" | "failed">}
+   */
+  async function shareInvite() {
+    const url = location.href;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ url });
+        return "shared";
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return "cancelled"; // closed the share sheet
+        // otherwise (not allowed here, nothing to share to): copy instead
+      }
+    }
+    if (await copyText(url)) {
+      announce("Invite link copied");
+      return "copied";
+    }
+    announce("Couldn't copy the invite link automatically. Copy it from the address bar instead.", true);
+    return "failed";
+  }
+
+  handoffLabel.textContent = typeof navigator.share === "function" ? "Send this invite to myself" : "Copy invite link";
+  handoffBtn.addEventListener("click", async () => {
+    if (done) return;
+    if ((await shareInvite()) === "copied") flashCopied(handoffBtn);
   });
 
   // ---------- tabs ----------
