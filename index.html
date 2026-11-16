@@ -22,7 +22,7 @@
   fetches PROD_API_BASE, script-src admits nothing but the hashed script, and a loopback origin can only reach the
   visitor's own machine, so it is no channel to send anything off it.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JUe9zqdT/YlNyf18KKUSpCIuvvRRITxam6CLKjY9L1Q='; style-src 'sha256-VZnjN0VC/iBOnwtl/hND5JKNuQo8Y+m2azgifCVBjS8='; font-src 'self'; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iY3klKhn+vqN5WT1GbOPk8xBCtPwAQ5qjrC3xfR/wcM='; style-src 'sha256-gqF15BkG2lr/zhrfLKNhKsPJlZk84qdV5+NeD+Go7xw='; font-src 'self'; img-src data:; connect-src https://zufosnvjijhqeepvawhi.supabase.co http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark light">
@@ -396,6 +396,8 @@ input[aria-invalid="true"]:focus-visible { box-shadow: 0 0 0 2px var(--err), 0 0
 .term-meta { font: 11.5px/1.4 var(--mono); color: var(--text-2); }
 @media (max-width: 419px) { .term-foot .btn.primary { width: 100%; } }
 .save-col > .callout, .save-col > .danger { margin: 14px 0 0; }
+/* The phone tip's page address (set as text): one run with no spaces once it has ?invite=, so it may break anywhere. */
+#phone-tip-addr { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
 
 /* "Is your AI connected?" checklist. A row's state is its text and the .done class; the icon (an empty ring, then a
    filled ring with a tick) and the colour only repeat it. */
@@ -805,13 +807,13 @@ footer p { margin: 0; max-width: 40rem; }
       </div>
       <div class="callout" id="phone-tip" hidden>
         <svg class="i" aria-hidden="true" focusable="false"><use href="#i-phone"/></svg>
-        <div><p><strong>On a phone? Save the link, then finish on a computer.</strong> Most AI apps only let you add a custom connector in a web browser or their desktop app. Save the link now in your password manager or a private note to yourself (not a group chat), then on a computer open this page again and choose 'Show me how to connect my AI'.</p></div>
+        <div><p><strong>On a phone? Save the link, then finish on a computer.</strong> Most AI apps only let you add a custom connector in a web browser or their desktop app. Save the link now in your password manager or a private note to yourself (not a group chat). Then, on a computer, open the invite link from your group chat again, or go to <span id="phone-tip-addr"></span>, and choose 'Show me how to connect my AI'.</p></div>
       </div>
       <section class="status" id="status-check" aria-labelledby="status-title" hidden>
         <h2 id="status-title" tabindex="-1">Is your AI connected?</h2>
         <ol class="status-list" id="status-list" role="list">
           <li class="status-row" id="status-connect"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Add your link to your AI using the steps on this page. This list updates by itself.</span><span class="if-done">Connected: your AI has reached Rendezvous.</span></li>
-          <li class="status-row" id="status-used"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Then ask your AI something, like one of the prompts below.</span><span class="if-done">Your AI has used Rendezvous.</span></li>
+          <li class="status-row" id="status-used"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Then ask your AI something, like one of the prompts on this page.</span><span class="if-done">Your AI has used Rendezvous.</span></li>
           <li class="status-row" id="status-posted"><svg class="status-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9"/><path d="M6.8 11.3l2.8 2.8 5.6-5.8"/></svg><span class="if-pending">Ask your AI to add your free times to the room.</span><span class="if-done">Your free times are in. Ask your AI later how the plan is going.</span></li>
         </ol>
         <p class="status-privacy" id="status-privacy">Checking sends your link only to Rendezvous, to see whether your AI has connected. Nothing is stored.</p>
@@ -1070,6 +1072,7 @@ footer p { margin: 0; max-width: 40rem; }
   const dangerFresh = $("danger-fresh");
   const dangerReturning = $("danger-returning");
   const phoneTip = $("phone-tip");
+  const phoneTipAddr = $("phone-tip-addr");
   const connectTitle = $("connect-title");
   const ccCommand = $("cc-command");
   const cursorInstall = $("cursor-install");
@@ -1804,20 +1807,36 @@ footer p { margin: 0; max-width: 40rem; }
   /**
    * Prompts for the returning view. With an invite code the page accepted (INVITE_RE: a server-generated code, never
    * text a person wrote), the first one hands the AI this page's invite link, and the second is the invitee prompts'
-   * second. Without one, the direct-signup prompts. The room title is never in them. room_join takes the whole link and,
-   * for someone already in the room, answers already_member (0.4.0 adds a next_step pointing to room_read).
-   * Pure (tests/web_test.ts).
+   * second. Without one, prompts about the rooms the person is already in: someone who has an account is probably in
+   * the room their plan is in, so neither prompt creates one. The room title is never in them. room_join takes the
+   * whole link and, for someone already in the room, answers already_member (0.4.0 adds a next_step pointing to
+   * room_read). Pure (tests/web_test.ts).
    * @param {string | null} code
    * @param {string} pageBase location.origin + location.pathname: this page's address without its query
    * @returns {string[]}
    */
   function returningPrompts(code, pageBase) {
-    if (!code || !INVITE_RE.test(code)) return examplePrompts(null);
+    if (!code || !INVITE_RE.test(code)) {
+      return [
+        "Check my Rendezvous rooms and tell me what each one needs from me. Show me exactly what you'll post before you post anything.",
+        "Show me where our plan stands in my Rendezvous rooms: the common free times, the budget range and the votes so far, in my local time.",
+      ];
+    }
     const [, afterOthers] = examplePrompts(code);
     return [
       "Join my Rendezvous room with this link: " + pageBase + "?invite=" + code + ". Then read the room, ask me when I'm free for the dates it's planning, and show me exactly what you'll post before you post it.",
       afterOthers,
     ];
+  }
+
+  /**
+   * The address the phone tip names, shown as text: this page without its query (so never ?api=), plus ?invite= only
+   * for a code the page accepted (INVITE_RE, as in returningPrompts). Never the MCP URL. Pure (tests/web_test.ts).
+   * @param {string | null} code
+   * @param {string} pageBase location.origin + location.pathname
+   */
+  function phoneTipAddress(code, pageBase) {
+    return code && INVITE_RE.test(code) ? pageBase + "?invite=" + code : pageBase;
   }
 
   /**
@@ -1937,6 +1956,7 @@ footer p { margin: 0; max-width: 40rem; }
     done = true;
     mcpUrlEl.textContent = mcpUrl;
     revealUrl(mcpUrl);
+    phoneTipAddr.textContent = phoneTipAddress(inviteCode, location.origin + location.pathname);
     phoneTip.hidden = !coarsePointer();
     fillConnectSteps(mcpUrl);
     if (opts.roomTitle) {
@@ -1945,7 +1965,12 @@ footer p { margin: 0; max-width: 40rem; }
     }
     renderPrompts(examplePrompts(opts.roomTitle));
     const statusPath = mcpPathOf(mcpUrl, API_BASE);
-    if (statusPath) setupStatusCheck(statusPath.slice("/mcp/".length), { roomId: opts.roomId });
+    if (statusPath) {
+      setupStatusCheck(statusPath.slice("/mcp/".length), { roomId: opts.roomId });
+      // On a phone the AI is usually connected later, on a computer (see the phone tip), so a copy here (saving the
+      // link) doesn't start checks that would run out unseen: nothing is sent until "Check my connection".
+      if (coarsePointer()) statusWaitForClick();
+    }
     syncSteps(); // a fresh card starts unsaved, whatever the returning view left
 
     document.title = "Your Rendezvous link";
@@ -1983,7 +2008,7 @@ footer p { margin: 0; max-width: 40rem; }
     markUrlSaved();
     success.classList.remove("awaiting-link");
     setupStatusCheck(path.slice("/mcp/".length), { roomId: null });
-    statusWaitForClick();
+    statusWaitForClick({ pasted: true });
     announce("Done. The steps now use your link.");
   }
 
@@ -2414,8 +2439,9 @@ footer p { margin: 0; max-width: 40rem; }
   // sends it without a CORS preflight. One request at a time, only while a polling window is open and the page is
   // visible, and at most STATUS_MAX_POSTS per page load. A server without the endpoint (0.3.0) answers 404, and the
   // checklist then hides for good. The token stays in memory: nothing is written to browser storage, cookies or the
-  // address bar. setupStatusCheck and startStatusCheck are the entry points. The returning view (a pasted link) adds
-  // statusWaitForClick, so nothing is sent before "Check my connection", and statusTeardown for its Back button.
+  // address bar. setupStatusCheck and startStatusCheck are the entry points. The returning view (a pasted link) and a
+  // sign-up on a phone (coarse pointer) add statusWaitForClick, so nothing is sent before "Check my connection"; the
+  // returning view also has statusTeardown for its Back button.
 
   const STATUS_TIMEOUT_MS = 8000;
   // Every 5 s for the first 5 minutes of a window, then every 15 s; every 30 s after 3 failures in a row.
@@ -2436,6 +2462,14 @@ footer p { margin: 0; max-width: 40rem; }
   const statusStartBtn = $("status-check-start");
   /** @type {Record<string, HTMLElement>} */
   const statusRows = { connect: $("status-connect"), used: $("status-used"), posted: $("status-posted") };
+  // The first row's pending text. The markup's says the list updates by itself, which is true only once checks can
+  // run; while they wait for "Check my connection" the row says to choose it instead.
+  const statusConnectPending = /** @type {HTMLElement} */ (statusRows.connect.querySelector(".if-pending"));
+  const STATUS_CONNECT_AUTO = statusConnectPending.textContent || "";
+  const STATUS_CONNECT_WAIT = "Add your link to your AI using the steps on this page, then choose Check my connection.";
+  // When a window ends on its own: after 20 minutes Check now still works; at the page's cap it is disabled.
+  const STATUS_STOPPED = "Stopped checking automatically. Choose Check now once your AI is set up.";
+  const STATUS_STOPPED_CAP = "Stopped checking automatically.";
 
   /** The checklist's state. The token lives here, in memory, and nowhere else. */
   const st = {
@@ -2454,7 +2488,7 @@ footer p { margin: 0; max-width: 40rem; }
     posts: 0,
     failures: 0,
     autoStarted: false,
-    /** The link was pasted (the returning view): checks wait for "Check my connection". */
+    /** The link was pasted (the returning view), so a refusal asks to check the paste. */
     pasted: false,
     done: /** @type {Record<string, boolean>} */ ({ connect: false, used: false, posted: false }),
   };
@@ -2530,6 +2564,7 @@ footer p { margin: 0; max-width: 40rem; }
     st.pasted = false;
     st.done = { connect: false, used: false, posted: false };
     for (const key of STATUS_KEYS) statusRows[key].classList.remove("done");
+    statusConnectPending.textContent = STATUS_CONNECT_AUTO;
     if (roomId) statusList.append(statusRows.posted);
     else statusRows.posted.remove();
     statusBtn.hidden = false;
@@ -2558,13 +2593,16 @@ footer p { margin: 0; max-width: 40rem; }
   }
 
   /**
-   * A pasted link (the returning view): nothing is sent until the person asks. "Check my connection" stands in for
-   * Check now, and a copy of the command or a config doesn't start the checks. Sends nothing.
+   * Nothing is sent until the person asks: for a pasted link (the returning view) and after a sign-up on a phone.
+   * "Check my connection" stands in for Check now, the first row says to choose it, and a copy of the URL, the
+   * command or a config doesn't start the checks. Sends nothing.
+   * @param {{ pasted?: boolean }} [opts] pasted: the link came from the returning view's field
    */
-  function statusWaitForClick() {
+  function statusWaitForClick(opts) {
     if (!st.token || st.gone) return;
     st.autoStarted = true;
-    st.pasted = true;
+    st.pasted = !!(opts && opts.pasted === true);
+    statusConnectPending.textContent = STATUS_CONNECT_WAIT;
     statusBtn.hidden = true;
     statusStartBtn.hidden = false;
   }
@@ -2591,7 +2629,7 @@ footer p { margin: 0; max-width: 40rem; }
     if (!st.open) return;
     const elapsed = Date.now() - st.start;
     if (elapsed >= STATUS_WINDOW_MS || st.posts >= STATUS_MAX_POSTS) {
-      statusStop("Stopped checking automatically.");
+      statusStop(st.posts >= STATUS_MAX_POSTS ? STATUS_STOPPED_CAP : STATUS_STOPPED);
       return;
     }
     const wait = Math.max(0, st.lastAt + statusDelay(elapsed, st.failures) - Date.now());
@@ -2602,7 +2640,7 @@ footer p { margin: 0; max-width: 40rem; }
     clearTimeout(st.timer);
     if (!st.open || st.inFlight || st.gone) return;
     if (Date.now() - st.start >= STATUS_WINDOW_MS || st.posts >= STATUS_MAX_POSTS) {
-      statusStop("Stopped checking automatically.");
+      statusStop(st.posts >= STATUS_MAX_POSTS ? STATUS_STOPPED_CAP : STATUS_STOPPED);
       return;
     }
     // Nothing is sent while the page is hidden; the visibilitychange handler picks the schedule up again.
@@ -2688,12 +2726,16 @@ footer p { margin: 0; max-width: 40rem; }
     if (startStatusCheck()) statusBtn.setAttribute("aria-busy", "true");
   });
 
-  // The first check for a pasted link; from then on Check now takes its place, and its focus.
+  // The first check for a pasted link, or after a sign-up on a phone; from then on Check now takes its place, and its
+  // focus.
   statusStartBtn.addEventListener("click", () => {
     statusStartBtn.hidden = true;
     statusBtn.hidden = false;
     statusBtn.focus();
-    if (startStatusCheck()) statusBtn.setAttribute("aria-busy", "true");
+    if (startStatusCheck()) {
+      statusBtn.setAttribute("aria-busy", "true");
+      statusConnectPending.textContent = STATUS_CONNECT_AUTO; // checks run now, and the button the row named is gone
+    }
   });
 
   document.addEventListener("visibilitychange", () => {
